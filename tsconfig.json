@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    // Build settings
+    "declaration": true,
+    "target": "es5",
+    "outDir": "dist",
+    // Language settings
+    "moduleResolution": "Node",
+    "downlevelIteration": true,
+    "lib": ["ES2017", "ES6", "DOM"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
