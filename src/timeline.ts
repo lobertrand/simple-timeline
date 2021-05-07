@@ -1,130 +1,87 @@
-import { createDiv, mapValue, minMax } from "./utils";
+import { mapValue, minMax } from "./utils";
+import { TimelineEvent, TimelineInputEvent } from "./timeline_event";
 import { Color } from "./colors";
 
-export type TimelineInputEvent<T = any> = {
-  date: Date;
-  description?: string;
-  color?: string;
-  custom?: T;
-};
-
 export type TimelineOptions<T = any> = {
-  events: TimelineInputEvent<T>[];
+  events?: TimelineInputEvent<T>[];
   container?: HTMLElement;
-  formatter?: (event: TimelineInputEvent<T>) => string;
-};
-type TimelineEvent<T = any> = TimelineInputEvent<T> & {
-  elements: {
-    wrapper: HTMLDivElement;
-    content: HTMLDivElement;
-    point: HTMLDivElement;
-    line: HTMLDivElement;
-  };
+  formatter?: (event: TimelineEvent<T>) => string;
+  alternate?: boolean;
 };
 
-export class Timeline<T = any> {
-  private _options: TimelineOptions;
+type TimelineElements = {
+  timeline?: HTMLDivElement;
+  line?: HTMLDivElement;
+  lineTrack?: HTMLDivElement;
+};
+
+export class Timeline<T = any> implements TimelineOptions<T> {
+  // Options
+  elements: TimelineElements = {};
+  container: HTMLDivElement;
+  alternate: boolean;
+  formatter: (event: TimelineEvent<T>) => string;
 
   constructor(options: TimelineOptions<T>) {
-    const defaultOptions: Partial<TimelineOptions<T>> = {
+    const defaultOptions: TimelineOptions<T> = {
       events: [],
       container: document.body,
       formatter: (event) => `
         <div style="white-space: nowrap;">
           <span style="color: ${event.color};">● </span>
           <strong style="color: ${
-            Color.BlueGrey[900]
+            Color.BLUE_GREY_900
           };">${event.date.toLocaleDateString()}</strong>
         </div>
-        <div style="color: ${Color.BlueGrey[600]};">${event.description}</div>
+        <div style="color: ${Color.BLUE_GREY_600};">${event.description}</div>
       `,
+      alternate: true,
     };
-    this._options = Object.assign(defaultOptions, options);
-
-    const timelineElt = createDiv("st");
-    timelineElt.style.width = "100%";
-    timelineElt.style.height = "400px";
-    timelineElt.style.position = "relative";
-
-    this._options.container.appendChild(timelineElt);
-
-    const times = this._options.events.map((event) => event.date.getTime());
-    const { min: minTime, max: maxTime } = minMax(times);
+    Object.assign(this, Object.assign(defaultOptions, options));
 
     const LINE_HEIGHT_PERCENT = 50;
     const START_PERCENT = 15;
     const END_PERCENT = 85;
 
-    const lineElt = createDiv("st-line");
-    lineElt.style.top = LINE_HEIGHT_PERCENT + "%";
-    timelineElt.appendChild(lineElt);
+    this.container.innerHTML = /*html*/ `
+      <div class="st" style="width: 100%; height: 400px; position: relative;">
+        <div class="st-line" style="top: ${LINE_HEIGHT_PERCENT}%;"></div>
+        <div class="st-line-track" style="top: ${LINE_HEIGHT_PERCENT}%; 
+            left: ${START_PERCENT}%; right: ${100 - END_PERCENT}%;"></div>
+      </div>
+    `;
+    this.elements.timeline = this.container.querySelector(".st");
+    this.elements.line = this.container.querySelector(".st-line");
+    this.elements.lineTrack = this.container.querySelector(".st-line-track");
 
-    const lineTrackElt = createDiv("st-line-track");
-    lineTrackElt.style.top = LINE_HEIGHT_PERCENT + "%";
-    lineTrackElt.style.left = START_PERCENT + "%";
-    lineTrackElt.style.right = 100 - END_PERCENT + "%";
+    const times = options.events.map((event) => event.date.getTime());
+    const { min: minTime, max: maxTime } = minMax(times);
 
-    timelineElt.appendChild(lineTrackElt);
+    const events: TimelineEvent<T>[] = [];
 
-    const eventElts: TimelineEvent<T>[] = [];
-
-    this._options.events.forEach((event, i) => {
-      const defaultEventOptions: Partial<TimelineInputEvent<T>> = {
-        color: Color.BlueGrey[500],
-        description: "Event",
-      };
-      event = Object.assign(defaultEventOptions, event);
-
-      // Creating elements
-      const position = i % 2 == 0 ? "st-top" : "st-bottom";
-      const eventElt = createDiv(`st-event ${position}`);
-
-      const eventLabelElt = createDiv("st-event-label");
-      eventLabelElt.innerHTML = this._options.formatter(event);
-      eventElt.appendChild(eventLabelElt);
-
-      const eventLineElt = createDiv("st-event-line");
-      eventLineElt.style.backgroundColor = event.color;
-      eventElt.appendChild(eventLineElt);
-
-      timelineElt.appendChild(eventElt);
-
-      // Point is outside eventElt
-      const eventPointElt = createDiv("st-event-point");
-      eventPointElt.style.backgroundColor = event.color;
-      timelineElt.appendChild(eventPointElt);
+    options.events.forEach((inputEvent, i) => {
+      const event = new TimelineEvent<T>({
+        ...inputEvent,
+        timeline: this,
+        index: i,
+      });
 
       // Positioning elements
       const xPos = mapValue(
-        event.date.getTime(),
+        inputEvent.date.getTime(),
         minTime,
         maxTime,
         START_PERCENT,
         END_PERCENT
       );
 
-      eventElt.style.left = xPos + "%";
-      eventElt.style.top = LINE_HEIGHT_PERCENT + "%";
+      event.elements.event.style.left = xPos + "%";
+      event.elements.event.style.top = LINE_HEIGHT_PERCENT + "%";
 
-      eventPointElt.style.left = xPos + "%";
-      eventPointElt.style.top = LINE_HEIGHT_PERCENT + "%";
+      event.elements.point.style.left = xPos + "%";
+      event.elements.point.style.top = LINE_HEIGHT_PERCENT + "%";
 
-      eventElts.push({
-        date: event.date,
-        color: event.color,
-        description: event.description,
-        custom: event.custom,
-        elements: {
-          wrapper: eventElt,
-          content: eventLabelElt,
-          point: eventPointElt,
-          line: eventLineElt,
-        },
-      });
+      events.push(event);
     });
-
-    // for (const eventElt of eventElts) {
-    //   console.log(getComputedStyle(eventElt.wrapper).height);
-    // }
   }
 }
