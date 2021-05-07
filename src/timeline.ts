@@ -1,4 +1,4 @@
-import { mapValue, minMax } from "./utils";
+import { createDiv, mapValue, minMax } from "./utils";
 import { TimelineEvent, TimelineInputEvent } from "./timeline_event";
 import { Color } from "./colors";
 
@@ -15,30 +15,21 @@ type TimelineElements = {
   lineTrack?: HTMLDivElement;
 };
 
-export class Timeline<T = any> implements TimelineOptions<T> {
+export class Timeline<T = any> {
   // Options
+  events: TimelineEvent[];
   elements: TimelineElements = {};
-  container: HTMLDivElement;
+  container: Element;
   alternate: boolean;
   formatter: (event: TimelineEvent<T>) => string;
 
   constructor(options: TimelineOptions<T>) {
-    const defaultOptions: TimelineOptions<T> = {
-      events: [],
-      container: document.body,
-      formatter: (event) => `
-        <div style="white-space: nowrap;">
-          <span style="color: ${event.color};">● </span>
-          <strong style="color: ${
-            Color.BLUE_GREY_900
-          };">${event.date.toLocaleDateString()}</strong>
-        </div>
-        <div style="color: ${Color.BLUE_GREY_600};">${event.description}</div>
-      `,
-      alternate: true,
-    };
-    Object.assign(this, Object.assign(defaultOptions, options));
+    // Options validation
+    this.formatter = options.formatter ?? defaultFormatter;
+    this.alternate = options.alternate ?? true;
+    this.container = options.container ?? defaultContainer();
 
+    // Building elements
     const LINE_HEIGHT_PERCENT = 50;
     const START_PERCENT = 15;
     const END_PERCENT = 85;
@@ -57,13 +48,14 @@ export class Timeline<T = any> implements TimelineOptions<T> {
     const times = options.events.map((event) => event.date.getTime());
     const { min: minTime, max: maxTime } = minMax(times);
 
-    const events: TimelineEvent<T>[] = [];
+    // Building events
+    this.events = [];
 
-    options.events.forEach((inputEvent, i) => {
+    options.events.forEach((inputEvent, index) => {
       const event = new TimelineEvent<T>({
         ...inputEvent,
         timeline: this,
-        index: i,
+        index,
       });
 
       // Positioning elements
@@ -81,7 +73,27 @@ export class Timeline<T = any> implements TimelineOptions<T> {
       event.elements.point.style.left = xPos + "%";
       event.elements.point.style.top = LINE_HEIGHT_PERCENT + "%";
 
-      events.push(event);
+      this.events.push(event);
     });
   }
+}
+
+const defaultFormatter = (event: TimelineEvent) => {
+  const date = event.date.toLocaleDateString(undefined, {
+    day: "numeric",
+    month: "short",
+  });
+  return `
+    <div style="white-space: nowrap;">
+      <span style="color: ${event.color};">● </span>
+      <strong style="color: ${Color.BLUE_GREY_900};">${date}</strong>
+    </div>
+    <div style="color: ${Color.BLUE_GREY_600};">${event.description}</div>
+  `;
+};
+
+const defaultContainer = () => {
+  const container = createDiv("st-container");
+  document.body.appendChild(container);
+  return container;
 }

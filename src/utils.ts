@@ -18,8 +18,11 @@ export function minMax(array: number[]) {
   return { min, max };
 }
 
-export function createDiv(className = "") {
+export function createDiv(className = "", parent?: HTMLElement) {
   const div = document.createElement("div");
-  div.className = className;
+  if (className) {
+    div.className = className;
+  }
+  parent?.appendChild(div);
   return div;
 }

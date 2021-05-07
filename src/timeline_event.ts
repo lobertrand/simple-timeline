@@ -1,5 +1,5 @@
 import { Color } from "./colors";
-import { Timeline, TimelineOptions } from "./timeline";
+import { Timeline } from "./timeline";
 import { createDiv } from "./utils";
 
 export type TimelineInputEvent<T = any> = {
@@ -23,7 +23,7 @@ export type TimelineEventElements = {
   line?: HTMLDivElement;
 };
 
-export class TimelineEvent<T = any> implements TimelineEventOptions<T> {
+export class TimelineEvent<T = any> {
   // User options
   date: Date;
   description: string;
