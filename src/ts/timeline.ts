@@ -1,6 +1,6 @@
-import { createDiv, mapValue, minMax } from "./utils";
+import { createDiv, minMax } from "./shared/utils";
 import { TimelineEvent, TimelineInputEvent } from "./timeline_event";
-import { Color } from "./colors";
+import { Color } from "./shared/colors";
 
 export type TimelineOptions<T = any> = {
   events?: TimelineInputEvent<T>[];
@@ -15,64 +15,67 @@ type TimelineElements = {
   lineTrack?: HTMLDivElement;
 };
 
+type TimelineProperties = {
+  minTime?: number;
+  maxTime?: number;
+  leftBound?: number;
+  rightBound?: number;
+  lineHeight?: number;
+};
+
 export class Timeline<T = any> {
-  // Options
-  events: TimelineEvent[];
-  elements: TimelineElements = {};
+  // TimelineOptions properties
+  events: TimelineEvent<T>[];
   container: Element;
-  alternate: boolean;
   formatter: (event: TimelineEvent<T>) => string;
+  alternate: boolean;
+
+  // Other properties
+  elements: TimelineElements = {};
+  properties: TimelineProperties = {};
 
   constructor(options: TimelineOptions<T>) {
     // Options validation
+    const inputEvents = options.events ?? [];
     this.formatter = options.formatter ?? defaultFormatter;
     this.alternate = options.alternate ?? true;
     this.container = options.container ?? defaultContainer();
 
-    // Building elements
-    const LINE_HEIGHT_PERCENT = 50;
-    const START_PERCENT = 15;
-    const END_PERCENT = 85;
+    const times = inputEvents.map((event) => event.date.getTime());
+    const { min, max } = minMax(times);
 
+    this.properties = {
+      lineHeight: 50,
+      leftBound: 15,
+      rightBound: 85,
+      minTime: min,
+      maxTime: max,
+    };
+
+    // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st" style="width: 100%; height: 400px; position: relative;">
-        <div class="st-line" style="top: ${LINE_HEIGHT_PERCENT}%;"></div>
-        <div class="st-line-track" style="top: ${LINE_HEIGHT_PERCENT}%; 
-            left: ${START_PERCENT}%; right: ${100 - END_PERCENT}%;"></div>
+      <div class="st" style="width: 100%; height: 100vh; position: relative;">
+        <div class="st-line" style="top: ${this.properties.lineHeight}%;"></div>
+        <div class="st-line-track" style="
+          top: ${this.properties.lineHeight}%; 
+          left: ${this.properties.leftBound}%; 
+          right: ${100 - this.properties.rightBound}%;
+        "></div>
       </div>
     `;
     this.elements.timeline = this.container.querySelector(".st");
     this.elements.line = this.container.querySelector(".st-line");
     this.elements.lineTrack = this.container.querySelector(".st-line-track");
 
-    const times = options.events.map((event) => event.date.getTime());
-    const { min: minTime, max: maxTime } = minMax(times);
-
     // Building events
     this.events = [];
 
-    options.events.forEach((inputEvent, index) => {
+    inputEvents.forEach((inputEvent, index) => {
       const event = new TimelineEvent<T>({
         ...inputEvent,
         timeline: this,
         index,
       });
-
-      // Positioning elements
-      const xPos = mapValue(
-        inputEvent.date.getTime(),
-        minTime,
-        maxTime,
-        START_PERCENT,
-        END_PERCENT
-      );
-
-      event.elements.event.style.left = xPos + "%";
-      event.elements.event.style.top = LINE_HEIGHT_PERCENT + "%";
-
-      event.elements.point.style.left = xPos + "%";
-      event.elements.point.style.top = LINE_HEIGHT_PERCENT + "%";
-
       this.events.push(event);
     });
   }
@@ -96,4 +99,4 @@ const defaultContainer = () => {
   const container = createDiv("st-container");
   document.body.appendChild(container);
   return container;
-}
+};

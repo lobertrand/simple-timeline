@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../../dist/simple-timeline-1.0.0.css" />
+    <title>Simple Timeline</title>
+  </head>
+  <body>
+    <div id="timeline-container"></div>
+    <script src="../../dist/simple-timeline-1.0.0.js"></script>
+    <script src="index.js"></script>
+  </body>
+
+  <style>
+    /* User styles */
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      /* font-family: system-ui; */
+      margin: 0;
+      padding: 0;
+    }
+
+    .st {
+      /* --st-event-line-length: 20px; */
+      user-select: none;
+    }
+
+    .st-event {
+      /* max-width: 25%; */
+    }
+
+    .st-event-label {
+      padding: 0;
+      cursor: pointer;
+      border-radius: 10px;
+      background-color: rgba(255, 255, 255, .5);
+    }
+
+    .st-event-label div {
+      padding: 8px 10px;
+    }
+
+    .st-event-label div:first-child {
+      border-bottom: 1px solid lightgray;
+    }
+  </style>
+</html>
