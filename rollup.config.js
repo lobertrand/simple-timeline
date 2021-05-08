@@ -1,6 +1,6 @@
 import typescript from "rollup-plugin-typescript2";
 import dts from "rollup-plugin-dts";
-import copy from "rollup-plugin-copy";
+import copy from "rollup-plugin-copy-watch";
 import del from "rollup-plugin-delete";
 import pkg from "./package.json";
 
@@ -33,6 +33,7 @@ export default [{
                     rename: `${pkg.name}-${pkg.version}.css`
                 },
             ],
+            watch: "src/css",
             verbose: true,
         }),
     ],

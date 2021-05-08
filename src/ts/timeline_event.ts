@@ -126,20 +126,53 @@ export class TimelineEvent<T = any> {
     this.elements.point.style.top = y + "%";
   }
 
-  // Experiment
-  set(property: "description" | "color" | "date", value: any) {
-    if (property === "description") {
-      this.description = value;
+  /**
+   * Update data of the event and refresh parts of the UI that need to change.
+   */
+  update(
+    newValues: Partial<Omit<TimelineInputEvent, "mouseEvents" | "placement">>
+  ) {
+    let reformat = false;
+    let updateColor = false;
+    let updatePosition = false;
+
+    // Réfléchir aux valeurs par défaut : doit-on factoriser le code
+    // permettant de déterminer les valeurs par défaut ?
+
+    // Update data
+    if ("date" in newValues) {
+      this.date = newValues.date;
+      reformat = true;
+      updatePosition = true;
+    }
+    if ("description" in newValues) {
+      this.description = newValues.description ?? "Event";
+      reformat = true;
+    }
+    if ("color" in newValues) {
+      this.color = newValues.color ?? Color.BLUE_GREY_500;
+      updateColor = true;
+      reformat = true;
+    }
+    if ("custom" in newValues) {
+      this.custom = newValues.custom;
+      reformat = true;
+      updateColor = true;
+      updatePosition = true;
+    }
+
+    // Update UI
+    if (reformat) {
       this.elements.label.innerHTML = this.timeline.formatter(this);
-    } else if (property === "color") {
-      this.color = value;
-      this.elements.label.innerHTML = this.timeline.formatter(this);
-      this.elements.point.style.backgroundColor = value;
-      this.elements.line.style.backgroundColor = value;
-    } else if (property === "date") {
-      this.date = value;
-      this.elements.label.innerHTML = this.timeline.formatter(this);
-      this.placeOnAxis(); // + recalculer les min/max et repositionner tous les événements si la nouvelle date est en dehors du min et du max courant
+    }
+    if (updateColor) {
+      this.elements.point.style.backgroundColor = this.color;
+      this.elements.line.style.backgroundColor = this.color;
+    }
+    if (updatePosition) {
+      this.placeOnAxis();
+      // + recalculer les min/max et repositionner tous les événements,
+      // y compris leur placement (top, right, bottom, left)
     }
   }
 }

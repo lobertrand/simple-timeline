@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    // Build settings
+    "target": "es5",
+    "module": "AMD",
+    // Language settings
+    "moduleResolution": "Node",
+    "downlevelIteration": true,
+    "lib": ["ES2017", "ES6", "DOM"]
+  },
+  "include": ["index.ts"],
+}

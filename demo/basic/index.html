@@ -8,8 +8,11 @@
   </head>
   <body>
     <div id="timeline-container"></div>
-    <script src="../../dist/simple-timeline-1.0.0.js"></script>
-    <script src="index.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script>
+      require(["../../dist/simple-timeline-1.0.0.js", "index.js"]);
+    </script>
   </body>
 
   <style>
@@ -40,7 +43,7 @@
       padding: 0;
       cursor: pointer;
       border-radius: 10px;
-      background-color: rgba(255, 255, 255, .5);
+      background-color: rgba(255, 255, 255, 0.5);
     }
 
     .st-event-label div {

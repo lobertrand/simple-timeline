@@ -86,7 +86,7 @@ const defaultFormatter = (event: TimelineEvent) => {
     day: "numeric",
     month: "short",
   });
-  return `
+  return /*html*/ `
     <div style="white-space: nowrap;">
       <span style="color: ${event.color};">● </span>
       <strong style="color: ${Color.BLUE_GREY_900};">${date}</strong>
