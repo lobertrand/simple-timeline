@@ -1,4 +1,4 @@
-import { createDiv, minMax } from "./shared/utils";
+import { createDiv } from "./shared/utils";
 import { TimelineEvent, TimelineInputEvent } from "./timeline_event";
 import { Color } from "./shared/colors";
 
@@ -36,13 +36,12 @@ export class Timeline<T = any> {
 
   constructor(options: TimelineOptions<T>) {
     // Options validation
-    const inputEvents = options.events ?? [];
+    const inputEvents = Array.from(options.events) ?? [];
     this.formatter = options.formatter ?? defaultFormatter;
     this.alternate = options.alternate ?? true;
     this.container = options.container ?? defaultContainer();
 
-    const times = inputEvents.map((event) => event.date.getTime());
-    const { min, max } = minMax(times);
+    const { min, max } = minMaxTimes(inputEvents);
 
     this.properties = {
       lineHeight: 50,
@@ -68,18 +67,49 @@ export class Timeline<T = any> {
     this.elements.lineTrack = this.container.querySelector(".st-line-track");
 
     // Building events
-    this.events = [];
-
-    inputEvents.forEach((inputEvent, index) => {
-      const event = new TimelineEvent<T>({
+    sortEvents(inputEvents);
+    this.events = inputEvents.map((inputEvent, index) => {
+      return new TimelineEvent<T>({
         ...inputEvent,
         timeline: this,
         index,
       });
-      this.events.push(event);
+    });
+
+    this.repositionEvents();
+  }
+
+  repositionEvents() {
+    this.recomputeMinMax();
+    sortEvents(this.events);
+    this.events.forEach((event, i) => {
+      event.index = i;
+      event.placeOnAxis();
+      event.refreshPlacement();
     });
   }
+
+  private recomputeMinMax() {
+    const { min, max } = minMaxTimes(this.events);
+    this.properties.minTime = min;
+    this.properties.maxTime = max;
+  }
 }
+
+const minMaxTimes = <T>(events: TimelineInputEvent<T>[]) => {
+  let min = Infinity;
+  let max = 0;
+  for (const event of events) {
+    const time = event.date.getTime();
+    min = Math.min(time, min);
+    max = Math.max(time, max);
+  }
+  return { min, max };
+};
+
+const sortEvents = <T>(events: TimelineInputEvent<T>[]) => {
+  events.sort((a, b) => (a.date.getTime() > b.date.getTime() ? 1 : -1));
+};
 
 const defaultFormatter = (event: TimelineEvent) => {
   const date = event.date.toLocaleDateString(undefined, {

@@ -8,16 +8,6 @@ export function mapValue(
   return ((value - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
 }
 
-export function minMax(array: number[]) {
-  let min = Infinity;
-  let max = 0;
-  for (const n of array) {
-    min = Math.min(n, min);
-    max = Math.max(n, max);
-  }
-  return { min, max };
-}
-
 export function createDiv(className = "", parent?: Element) {
   const div = document.createElement("div");
   if (className) {

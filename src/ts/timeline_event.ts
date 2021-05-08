@@ -55,17 +55,15 @@ export class TimelineEvent<T = any> {
     this.date = options.date;
 
     // Other options
-    this.description = options.description ?? "Event";
-    this.color = options.color ?? Color.BLUE_GREY_500;
+    this.description = options.description ?? defaultDescription;
+    this.color = options.color ?? defaultColor;
     this.mouseEvents = options.mouseEvents ?? {};
     this.custom = options.custom;
 
-    if (options.placement) {
-      this.placement = options.placement;
-    } else if (this.timeline.alternate) {
+    if (this.timeline.alternate) {
       this.placement = this.index % 2 == 0 ? "top" : "bottom";
     } else {
-      this.placement = "top";
+      this.placement = options.placement ?? "top";
     }
 
     // Building elements
@@ -102,28 +100,29 @@ export class TimelineEvent<T = any> {
         this.mouseEvents.mouseover(this, overEvent);
       };
     }
-
-    // Placement
-    this.placeOnAxis();
   }
 
-  private placeOnAxis() {
+  placeOnAxis() {
     const props = this.timeline.properties;
 
-    const x = mapValue(
-      this.date.getTime(),
-      props.minTime,
-      props.maxTime,
-      props.leftBound,
-      props.rightBound
-    );
-    const y = props.lineHeight;
+    const x =
+      this.timeline.events.length == 1
+        ? "50%"
+        : mapValue(
+            this.date.getTime(),
+            props.minTime,
+            props.maxTime,
+            props.leftBound,
+            props.rightBound
+          ) + "%";
 
-    this.elements.event.style.left = x + "%";
-    this.elements.event.style.top = y + "%";
+    const y = props.lineHeight + "%";
 
-    this.elements.point.style.left = x + "%";
-    this.elements.point.style.top = y + "%";
+    this.elements.event.style.left = x;
+    this.elements.event.style.top = y;
+
+    this.elements.point.style.left = x;
+    this.elements.point.style.top = y;    
   }
 
   /**
@@ -146,11 +145,11 @@ export class TimelineEvent<T = any> {
       updatePosition = true;
     }
     if ("description" in newValues) {
-      this.description = newValues.description ?? "Event";
+      this.description = newValues.description ?? defaultDescription;
       reformat = true;
     }
     if ("color" in newValues) {
-      this.color = newValues.color ?? Color.BLUE_GREY_500;
+      this.color = newValues.color ?? defaultColor;
       updateColor = true;
       reformat = true;
     }
@@ -170,9 +169,33 @@ export class TimelineEvent<T = any> {
       this.elements.line.style.backgroundColor = this.color;
     }
     if (updatePosition) {
-      this.placeOnAxis();
+      this.timeline.repositionEvents();
       // + recalculer les min/max et repositionner tous les événements,
       // y compris leur placement (top, right, bottom, left)
     }
   }
+
+  delete() {
+    const index = this.timeline.events.indexOf(this);
+    this.timeline.events.splice(index, 1);
+    this.elements.event.remove();
+    this.elements.point.remove();
+    this.timeline.repositionEvents();
+  }
+
+  refreshPlacement() {
+    if (this.timeline.alternate) {
+      this.placement = this.index % 2 == 0 ? "top" : "bottom";
+    }
+    this.elements.event.classList.remove(
+      "st-top",
+      "st-right",
+      "st-bottom",
+      "st-left"
+    );
+    this.elements.event.classList.add(`st-${this.placement}`);
+  }
 }
+
+const defaultDescription = "Event";
+const defaultColor = Color.BLUE_GREY_500;

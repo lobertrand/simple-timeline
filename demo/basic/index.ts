@@ -43,14 +43,15 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((event, i) => ({
   // placement: i % 2 == 1 ? "top" : "bottom",
   mouseEvents: {
     click(event) {
-      const e = random(myEvents);
+      // const e = random(myEvents);
 
-      event.update({
-        color: e.color,
-        description: e.description,
-        date: new Date(e.date),
-        custom: e,
-      });
+      // event.update({
+      //   // color: e.color,
+      //   // description: e.description,
+      //   date: addDays(event.date, 20),
+      //   // custom: e,
+      // });
+      event.delete();
     },
   },
 }));
@@ -62,7 +63,7 @@ new Timeline({
   formatter: (event) => {
     const date = event.date.toLocaleDateString(undefined, {
       day: "numeric",
-      month: "short",
+      month: "long",
     });
     return /*html*/ `
       <div style="font-weight: bold; color: #777;">
