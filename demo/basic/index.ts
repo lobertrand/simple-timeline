@@ -58,21 +58,21 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((event, i) => ({
 }));
 
 const timeline = new Timeline({
-  container: document.querySelector("#timeline-container"),
+  container: document.querySelector("#timeline"),
   events: events,
   // alternate: false,
-  formatter: (event) => {
-    const date = event.date.toLocaleDateString(undefined, {
-      day: "numeric",
-      month: "long",
-    });
-    return /*html*/ `
-      <div style="font-weight: bold; color: #777;">
-        <span style="color: ${event.color};">${event.custom.id} · </span>${date}
-      </div>
-      <div style="color: #777;">${event.description}</div>
-    `;
-  },
+  // formatter: (event) => {
+  //   const date = event.date.toLocaleDateString(undefined, {
+  //     day: "numeric",
+  //     month: "long",
+  //   });
+  //   return /*html*/ `
+  //     <div style="font-weight: bold; color: #777;">
+  //       <span style="color: ${event.color};">${event.custom.id} · </span>${date}
+  //     </div>
+  //     <div style="color: #777;">${event.description}</div>
+  //   `;
+  // },
   mouseEvents: {
     click(event) {
       // const e = random(myEvents);
@@ -91,8 +91,7 @@ const timeline = new Timeline({
   },
 });
 
-const button = document.createElement("button");
-button.innerText = "Add event";
+const button = document.querySelector("#add-event-button") as HTMLButtonElement;
 button.onclick = () => {
   const event = {
     id: 5,
@@ -109,9 +108,7 @@ button.onclick = () => {
     },
   ]);
   console.log(timeline);
-  
 };
-document.body.appendChild(button);
 
 function random<T>(array: T[]): T {
   const index = Math.floor(Math.random() * array.length);

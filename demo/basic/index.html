@@ -7,7 +7,15 @@
     <title>Simple Timeline</title>
   </head>
   <body>
-    <div id="timeline-container"></div>
+    <div class="container">
+      <h1>Basic timeline demonstration</h1>
+      <div class="card">
+        <div id="timeline"></div>
+      </div>
+      <div class="flex justify-end py-12">
+        <button id="add-event-button" class="button">+ Add Random Event</button>
+      </div>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
     <script>
@@ -25,9 +33,59 @@
     }
 
     body {
-      /* font-family: system-ui; */
+      font-family: system-ui, sans-serif;
       margin: 0;
       padding: 0;
+      background-color: #eceff1;
+      color: #455a64;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: 4px;
+      box-shadow: 0 8px 10px -5px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .button {
+      padding: 0 12px;
+      line-height: 36px;
+      border: none;
+      background-color: #2196f3;
+      color: white;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      letter-spacing: 0.05em;
+      transition: box-shadow 0.1s;
+    }
+
+    .button:hover {
+      background-color: #1976d2;
+    }
+
+    .button:is(:focus, :active) {
+      box-shadow: 0 0 0 3px #2196f34d;
+      outline: none;
+    }
+
+    .flex {
+      display: flex;
+    }
+
+    .justify-end {
+      justify-content: flex-end;
+    }
+
+    .py-12 {
+      padding: 12px 0;
     }
 
     .st {
@@ -35,15 +93,23 @@
       user-select: none;
     }
 
-    .st-event {
-      /* max-width: 25%; */
+    .st-event-label:hover {
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .st-event-point {
+      cursor: pointer;
+    }
+
+    .st-event-line {
+      cursor: pointer;
     }
 
     .st-event-label {
       padding: 0;
       cursor: pointer;
       border-radius: 10px;
-      background-color: rgba(255, 255, 255, 0.5);
+      transition: 0.2s;
     }
 
     .st-event-label div {

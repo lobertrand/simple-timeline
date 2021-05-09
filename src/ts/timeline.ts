@@ -172,7 +172,7 @@ const defaultFormatter = (event: TimelineEvent) => {
 };
 
 const defaultContainer = () => {
-  const container = createDiv("st-container");
+  const container = createDiv("st-default-container");
   document.body.appendChild(container);
   return container;
 };
