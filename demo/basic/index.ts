@@ -42,24 +42,25 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((event, i) => ({
   // placement: "bottom",
   // placement: i % 2 == 1 ? "top" : "bottom",
   mouseEvents: {
-    click(event) {
-      // const e = random(myEvents);
-
-      // event.update({
-      //   // color: e.color,
-      //   // description: e.description,
-      //   date: addDays(event.date, 20),
-      //   // custom: e,
-      // });
-      event.delete();
-    },
+    // Déplacer la mise en place du listener dans la timeline !!!
+    // Sinon, les nouveaux événements ajoutés n'ont pas le listener
+    // click(event) {
+    //   // const e = random(myEvents);
+    //   // event.update({
+    //   //   // color: e.color,
+    //   //   // description: e.description,
+    //   //   date: addDays(event.date, 20),
+    //   //   // custom: e,
+    //   // });
+    //   event.delete();
+    // },
   },
 }));
 
-new Timeline({
+const timeline = new Timeline({
   container: document.querySelector("#timeline-container"),
   events: events,
-  // alternate: true,
+  // alternate: false,
   formatter: (event) => {
     const date = event.date.toLocaleDateString(undefined, {
       day: "numeric",
@@ -72,11 +73,60 @@ new Timeline({
       <div style="color: #777;">${event.description}</div>
     `;
   },
+  mouseEvents: {
+    click(event) {
+      // const e = random(myEvents);
+
+      // event.update({
+      //   // color: e.color,
+      //   // description: e.description,
+      //   date: addDays(event.date, 20),
+      //   // custom: e,
+      // });
+      event.delete();
+    },
+    // mouseover(event) {
+    //   console.log("mouseover", event.custom.id);
+    // }
+  },
 });
+
+const button = document.createElement("button");
+button.innerText = "Add event";
+button.onclick = () => {
+  const event = {
+    id: 5,
+    date: randomDateString("2020-01-01", "2023-01-01"),
+    description: "New Event",
+    color: randomColor(),
+  };
+  timeline.addEvents([
+    {
+      date: new Date(event.date),
+      description: event.description,
+      color: event.color,
+      custom: event,
+    },
+  ]);
+  console.log(timeline);
+  
+};
+document.body.appendChild(button);
 
 function random<T>(array: T[]): T {
   const index = Math.floor(Math.random() * array.length);
   return array[index];
+}
+
+function randomDateString(min: string, max: string): string {
+  const d1 = new Date(min).getTime();
+  const d2 = new Date(max).getTime();
+  const d3 = Math.floor(Math.random() * (d2 - d1 + 1) + d1);
+  return new Date(d3).toISOString().slice(0, 10);
+}
+
+function randomColor(): string {
+  return "#" + Math.floor(Math.random() * 16777215).toString(16);
 }
 
 function reverse(str: string): string {

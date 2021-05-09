@@ -7,12 +7,23 @@ export type TimelineOptions<T = any> = {
   container?: HTMLElement;
   formatter?: (event: TimelineEvent<T>) => string;
   alternate?: boolean;
+  mouseEvents?: TimelineMouseEvents<T>;
 };
 
 type TimelineElements = {
   timeline?: HTMLDivElement;
   line?: HTMLDivElement;
   lineTrack?: HTMLDivElement;
+};
+
+type TimelineMouseEventHandler<T = any> = (
+  event: TimelineEvent<T>,
+  mouseEvent: MouseEvent
+) => void;
+
+type TimelineMouseEvents<T = any> = {
+  click?: TimelineMouseEventHandler<T>;
+  mouseover?: TimelineMouseEventHandler<T>;
 };
 
 type TimelineProperties = {
@@ -40,6 +51,7 @@ export class Timeline<T = any> {
     this.formatter = options.formatter ?? defaultFormatter;
     this.alternate = options.alternate ?? true;
     this.container = options.container ?? defaultContainer();
+    const mouseEvents = options.mouseEvents ?? {};
 
     const { min, max } = minMaxTimes(inputEvents);
 
@@ -53,7 +65,7 @@ export class Timeline<T = any> {
 
     // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st" style="width: 100%; height: 100vh; position: relative;">
+      <div class="st" style="width: 100%; height: 400px; position: relative;">
         <div class="st-line" style="top: ${this.properties.lineHeight}%;"></div>
         <div class="st-line-track" style="
           top: ${this.properties.lineHeight}%; 
@@ -77,6 +89,40 @@ export class Timeline<T = any> {
     });
 
     this.repositionEvents();
+
+    // Mouse events
+    if (mouseEvents.click) {
+      attachMouseEvent(this, options.mouseEvents.click);
+    }
+    if (mouseEvents.mouseover) {
+      attachMouseEvent(this, options.mouseEvents.mouseover);
+    }
+  }
+
+  addEvents(newEventOptions: TimelineInputEvent<T>[]) {
+    // Add new events (without recomputing positions at each addition)
+    newEventOptions.forEach((inputEvent) => {
+      this.events.push(
+        new TimelineEvent<T>({
+          ...inputEvent,
+          timeline: this,
+        })
+      );
+    });
+    // Recompute all positions once
+    this.repositionEvents();
+  }
+
+  setEvents(newEventOptions: TimelineInputEvent<T>[]) {
+    // Delete existing events (without recomputing positions at each removal)
+    this.events.forEach((event) => {
+      // Remove from UI
+      event.elements.event.remove();
+      event.elements.point.remove();
+    });
+    this.events = [];
+    // Add new events and ecompute all positions once
+    this.addEvents(newEventOptions);
   }
 
   repositionEvents() {
@@ -129,4 +175,21 @@ const defaultContainer = () => {
   const container = createDiv("st-container");
   document.body.appendChild(container);
   return container;
+};
+
+const attachMouseEvent = <T>(
+  timeline: Timeline<T>,
+  handler: TimelineMouseEventHandler<T>
+) => {
+  timeline.elements.timeline[`on${handler.name}`] = (
+    mouseEvent: MouseEvent
+  ) => {
+    const target = mouseEvent.target as Element;
+    const element = target.closest("[data-st-event-ref]");
+    if (element instanceof HTMLElement) {
+      const ref = element.dataset.stEventRef;
+      const event = timeline.events.find((e) => e.ref === ref);
+      handler(event, mouseEvent);
+    }
+  };
 };

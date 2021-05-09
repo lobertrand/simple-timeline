@@ -1,6 +1,6 @@
 import { Color } from "./shared/colors";
 import { Timeline } from "./timeline";
-import { parseDiv, mapValue } from "./shared/utils";
+import { parseDiv, mapValue, randomString } from "./shared/utils";
 
 export type TimelineEventPlacement = "top" | "right" | "bottom" | "left";
 
@@ -10,17 +10,11 @@ export type TimelineInputEvent<T = any> = {
   color?: string;
   custom?: T;
   placement?: TimelineEventPlacement;
-  mouseEvents?: TimelineEventMouseEvents<T>;
 };
 
 export type TimelineEventOptions<T = any> = TimelineInputEvent<T> & {
   timeline: Timeline<T>;
-  index: number;
-};
-
-export type TimelineEventMouseEvents<T = any> = {
-  click?: (event: TimelineEvent<T>, mouseEvent: MouseEvent) => void;
-  mouseover?: (event: TimelineEvent<T>, mouseEvent: MouseEvent) => void;
+  index?: number;
 };
 
 export type TimelineEventElements = {
@@ -39,14 +33,14 @@ export class TimelineEvent<T = any> {
   color: string;
   custom: T;
   placement: TimelineEventPlacement;
-  mouseEvents: TimelineEventMouseEvents<T>;
 
   // TimelineEventOptions properties
-  timeline: Timeline<T>;
+  private timeline: Timeline<T>;
   index: number;
 
   // Other properties
-  elements: TimelineEventElements = {};
+  readonly elements: TimelineEventElements = {};
+  readonly ref = randomString(8); // Unique identifier for an event
 
   constructor(options: TimelineEventOptions<T>) {
     // Required options
@@ -57,8 +51,8 @@ export class TimelineEvent<T = any> {
     // Other options
     this.description = options.description ?? defaultDescription;
     this.color = options.color ?? defaultColor;
-    this.mouseEvents = options.mouseEvents ?? {};
     this.custom = options.custom;
+    this.index = options.index ?? -1;
 
     if (this.timeline.alternate) {
       this.placement = this.index % 2 == 0 ? "top" : "bottom";
@@ -69,10 +63,11 @@ export class TimelineEvent<T = any> {
     // Building elements
     this.elements.event = parseDiv(/*html*/ `
       <div class="st-event st-${this.placement}">
-        <div class="st-event-label">
+        <div class="st-event-label" data-st-event-ref="${this.ref}">
           ${this.timeline.formatter(this)}
         </div>
-        <div class="st-event-line" style="background-color: ${this.color};">
+        <div class="st-event-line" style="background-color: ${this.color};"
+             data-st-event-ref="${this.ref}">
         </div>
       </div>
     `);
@@ -80,7 +75,8 @@ export class TimelineEvent<T = any> {
     this.elements.line = this.elements.event.querySelector(".st-event-line");
 
     this.elements.point = parseDiv(/*html*/ `
-      <div class="st-event-point" style="background-color: ${this.color};">
+      <div class="st-event-point" style="background-color: ${this.color};"
+           data-st-event-ref="${this.ref}">
       </div>
     `);
 
@@ -88,21 +84,10 @@ export class TimelineEvent<T = any> {
       this.elements.event,
       this.elements.point
     );
-
-    // Mouse events
-    if (this.mouseEvents.click) {
-      this.elements.label.onclick = (clickEvent) => {
-        this.mouseEvents.click(this, clickEvent);
-      };
-    }
-    if (this.mouseEvents.mouseover) {
-      this.elements.label.onmouseover = (overEvent) => {
-        this.mouseEvents.mouseover(this, overEvent);
-      };
-    }
   }
 
-  placeOnAxis() {
+  // Rendre cette fonction inacessible par les utilisateurs
+  placeOnAxis(/* Pass props as arguments instead */) {
     const props = this.timeline.properties;
 
     const x =
@@ -122,18 +107,17 @@ export class TimelineEvent<T = any> {
     this.elements.event.style.top = y;
 
     this.elements.point.style.left = x;
-    this.elements.point.style.top = y;    
+    this.elements.point.style.top = y;
   }
 
   /**
    * Update data of the event and refresh parts of the UI that need to change.
    */
-  update(
-    newValues: Partial<Omit<TimelineInputEvent, "mouseEvents" | "placement">>
-  ) {
+  update(newValues: Partial<TimelineInputEvent<T>>) {
     let reformat = false;
     let updateColor = false;
     let updatePosition = false;
+    let updatePlacement = false;
 
     // Réfléchir aux valeurs par défaut : doit-on factoriser le code
     // permettant de déterminer les valeurs par défaut ?
@@ -159,6 +143,10 @@ export class TimelineEvent<T = any> {
       updateColor = true;
       updatePosition = true;
     }
+    if ("placement" in newValues) {
+      this.placement = newValues.placement;
+      updatePlacement = true;
+    }
 
     // Update UI
     if (reformat) {
@@ -170,8 +158,9 @@ export class TimelineEvent<T = any> {
     }
     if (updatePosition) {
       this.timeline.repositionEvents();
-      // + recalculer les min/max et repositionner tous les événements,
-      // y compris leur placement (top, right, bottom, left)
+    }
+    if (updatePlacement && !updatePosition) {
+      this.refreshPlacement();
     }
   }
 
@@ -183,6 +172,7 @@ export class TimelineEvent<T = any> {
     this.timeline.repositionEvents();
   }
 
+  // Rendre cette fonction inacessible par les utilisateurs
   refreshPlacement() {
     if (this.timeline.alternate) {
       this.placement = this.index % 2 == 0 ? "top" : "bottom";

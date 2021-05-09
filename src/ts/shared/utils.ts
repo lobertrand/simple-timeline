@@ -18,11 +18,23 @@ export function createDiv(className = "", parent?: Element) {
 }
 
 export function parseDiv(html: string): HTMLDivElement {
-  const wrapper = document.createElement('div');
+  const wrapper = document.createElement("div");
   wrapper.innerHTML = html;
   if (wrapper.childElementCount == 1) {
     return wrapper.children[0] as HTMLDivElement;
   } else {
     return wrapper;
   }
+}
+
+export function randomString(length: number): string {
+  const result = Array.from({ length });
+  const characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const charactersLength = characters.length;
+  for (let i = 0; i < length; i++) {
+    const index = Math.floor(Math.random() * charactersLength);
+    result.push(characters.charAt(index));
+  }
+  return result.join("");
 }
