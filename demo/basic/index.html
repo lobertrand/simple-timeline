@@ -12,9 +12,11 @@
       <div class="card">
         <div id="timeline"></div>
       </div>
-      <div class="flex justify-end py-12">
+      <div class="flex justify-between pt-2 pb-1">
+        <h2 id="date" class="m-0"></h2>
         <button id="add-event-button" class="button">+ Add Random Event</button>
       </div>
+      <p id="description" class="m-0"></p>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
@@ -78,14 +80,35 @@
 
     .flex {
       display: flex;
+      align-items: center;
     }
 
     .justify-end {
       justify-content: flex-end;
     }
 
-    .py-12 {
-      padding: 12px 0;
+    .justify-between {
+      justify-content: space-between;
+    }
+
+    .pt-2 {
+      padding-top: 12px;
+    }
+
+    .pb-2 {
+      padding-bottom: 12px;
+    }
+
+    .pt-1 {
+      padding-top: 6px;
+    }
+
+    .pb-1 {
+      padding-bottom: 6px;
+    }
+
+    .m-0 {
+      margin: 0;
     }
 
     .st {

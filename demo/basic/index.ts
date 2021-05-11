@@ -74,23 +74,27 @@ const timeline = new Timeline({
   //   `;
   // },
   mouseEvents: {
-    click(event) {
-      // const e = random(myEvents);
-
-      // event.update({
-      //   // color: e.color,
-      //   // description: e.description,
-      //   date: addDays(event.date, 20),
-      //   // custom: e,
-      // });
-      event.delete();
+    click(event, mouseEvent) {
+      if (mouseEvent.ctrlKey) {
+        event.delete();
+      } else {
+        desc.innerText = event.description;
+        date.innerHTML =
+          `<span style="color: ${event.color}">● </span>` +
+          event.date.toLocaleDateString(undefined, {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+      }
     },
     // mouseover(event) {
     //   console.log("mouseover", event.custom.id);
     // }
   },
 });
-
+const desc = document.querySelector("#description") as HTMLParagraphElement;
+const date = document.querySelector("#date") as HTMLHeadingElement;
 const button = document.querySelector("#add-event-button") as HTMLButtonElement;
 button.onclick = () => {
   const event = {
@@ -107,8 +111,9 @@ button.onclick = () => {
       custom: event,
     },
   ]);
-  console.log(timeline);
 };
+
+console.log(timeline);
 
 function random<T>(array: T[]): T {
   const index = Math.floor(Math.random() * array.length);

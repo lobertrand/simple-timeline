@@ -1,5 +1,10 @@
 import { createDiv } from "./shared/utils";
-import { TimelineEvent, TimelineInputEvent } from "./timeline_event";
+import {
+  updateEventPosition,
+  updateEventPlacement,
+  TimelineEvent,
+  TimelineInputEvent,
+} from "./timeline_event";
 import { Color } from "./shared/colors";
 
 export type TimelineOptions<T = any> = {
@@ -88,7 +93,7 @@ export class Timeline<T = any> {
       });
     });
 
-    this.repositionEvents();
+    updateAllEventPositions(this);
 
     // Mouse events
     if (mouseEvents.click) {
@@ -110,7 +115,7 @@ export class Timeline<T = any> {
       );
     });
     // Recompute all positions once
-    this.repositionEvents();
+    updateAllEventPositions(this);
   }
 
   setEvents(newEventOptions: TimelineInputEvent<T>[]) {
@@ -124,23 +129,27 @@ export class Timeline<T = any> {
     // Add new events and ecompute all positions once
     this.addEvents(newEventOptions);
   }
-
-  repositionEvents() {
-    this.recomputeMinMax();
-    sortEvents(this.events);
-    this.events.forEach((event, i) => {
-      event.index = i;
-      event.placeOnAxis();
-      event.refreshPlacement();
-    });
-  }
-
-  private recomputeMinMax() {
-    const { min, max } = minMaxTimes(this.events);
-    this.properties.minTime = min;
-    this.properties.maxTime = max;
-  }
 }
+
+// Private API
+
+export const updateAllEventPositions = (timeline: Timeline) => {
+  recomputeMinMax(timeline);
+  sortEvents(timeline.events);
+  timeline.events.forEach((event, i) => {
+    event.index = i;
+    updateEventPosition(event);
+    updateEventPlacement(event);
+  });
+};
+
+// Helper functions
+
+const recomputeMinMax = (timeline: Timeline) => {
+  const { min, max } = minMaxTimes(timeline.events);
+  timeline.properties.minTime = min;
+  timeline.properties.maxTime = max;
+};
 
 const minMaxTimes = <T>(events: TimelineInputEvent<T>[]) => {
   let min = Infinity;
@@ -156,6 +165,25 @@ const minMaxTimes = <T>(events: TimelineInputEvent<T>[]) => {
 const sortEvents = <T>(events: TimelineInputEvent<T>[]) => {
   events.sort((a, b) => (a.date.getTime() > b.date.getTime() ? 1 : -1));
 };
+
+const attachMouseEvent = <T>(
+  timeline: Timeline<T>,
+  handler: TimelineMouseEventHandler<T>
+) => {
+  timeline.elements.timeline[`on${handler.name}`] = (
+    mouseEvent: MouseEvent
+  ) => {
+    const target = mouseEvent.target as Element;
+    const element = target.closest("[data-st-event-ref]");
+    if (element instanceof HTMLElement) {
+      const ref = element.dataset.stEventRef;
+      const event = timeline.events.find((e) => e.ref === ref);
+      handler(event, mouseEvent);
+    }
+  };
+};
+
+// Computed default values
 
 const defaultFormatter = (event: TimelineEvent) => {
   const date = event.date.toLocaleDateString(undefined, {
@@ -175,21 +203,4 @@ const defaultContainer = () => {
   const container = createDiv("st-default-container");
   document.body.appendChild(container);
   return container;
-};
-
-const attachMouseEvent = <T>(
-  timeline: Timeline<T>,
-  handler: TimelineMouseEventHandler<T>
-) => {
-  timeline.elements.timeline[`on${handler.name}`] = (
-    mouseEvent: MouseEvent
-  ) => {
-    const target = mouseEvent.target as Element;
-    const element = target.closest("[data-st-event-ref]");
-    if (element instanceof HTMLElement) {
-      const ref = element.dataset.stEventRef;
-      const event = timeline.events.find((e) => e.ref === ref);
-      handler(event, mouseEvent);
-    }
-  };
 };
