@@ -21,7 +21,6 @@ type TimelineEventElements = {
   event?: HTMLDivElement;
   label?: HTMLDivElement;
   wrapper?: HTMLDivElement;
-  content?: HTMLDivElement;
   point?: HTMLDivElement;
   line?: HTMLDivElement;
 };
@@ -66,7 +65,7 @@ export class TimelineEvent<T = any> {
         <div class="st-event-label" data-st-event-ref="${this.ref}">
           ${this.timeline.formatter(this)}
         </div>
-        <div class="st-event-line" style="background-color: ${this.color};"
+        <div class="st-event-line" style="color: ${this.color};"
              data-st-event-ref="${this.ref}">
         </div>
       </div>
@@ -75,7 +74,7 @@ export class TimelineEvent<T = any> {
     this.elements.line = this.elements.event.querySelector(".st-event-line");
 
     this.elements.point = parseDiv(/*html*/ `
-      <div class="st-event-point" style="background-color: ${this.color};"
+      <div class="st-event-point" style="color: ${this.color};"
            data-st-event-ref="${this.ref}">
       </div>
     `);
@@ -129,8 +128,8 @@ export class TimelineEvent<T = any> {
       this.elements.label.innerHTML = this.timeline.formatter(this);
     }
     if (updateColor) {
-      this.elements.point.style.backgroundColor = this.color;
-      this.elements.line.style.backgroundColor = this.color;
+      this.elements.point.style.color = this.color;
+      this.elements.line.style.color = this.color;
     }
     if (updatePosition) {
       updateAllEventPositions(this.timeline);

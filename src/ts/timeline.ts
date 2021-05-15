@@ -13,6 +13,21 @@ export type TimelineOptions<T = any> = {
   formatter?: (event: TimelineEvent<T>) => string;
   alternate?: boolean;
   mouseEvents?: TimelineMouseEvents<T>;
+  /**
+   * Width of the timeline element (not the container) as a string
+   * (default: `"100%"`)
+   */
+  width?: string;
+  /**
+   * Height of the timeline element (not the container) as a string
+   * (default: `"100%"`)
+   */
+  height?: string;
+  /**
+   * Height of the timeline line in percentage of the timeline's height
+   * (default: 50)
+   */
+  lineHeight?: number;
 };
 
 type TimelineElements = {
@@ -52,16 +67,19 @@ export class Timeline<T = any> {
 
   constructor(options: TimelineOptions<T>) {
     // Options validation
-    const inputEvents = Array.from(options.events) ?? [];
     this.formatter = options.formatter ?? defaultFormatter;
     this.alternate = options.alternate ?? true;
     this.container = options.container ?? defaultContainer();
+    const inputEvents = Array.from(options.events) ?? [];
     const mouseEvents = options.mouseEvents ?? {};
+    const width = options.width ?? "100%";
+    const height = options.height ?? "100%";
+    const lineHeight = options.lineHeight ?? 50;
 
     const { min, max } = minMaxTimes(inputEvents);
 
     this.properties = {
-      lineHeight: 50,
+      lineHeight: lineHeight,
       leftBound: 15,
       rightBound: 85,
       minTime: min,
@@ -70,11 +88,11 @@ export class Timeline<T = any> {
 
     // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st" style="width: 100%; height: 400px; position: relative;">
+      <div class="st" style="width: ${width}; height: ${height}; position: relative;">
         <div class="st-line" style="top: ${this.properties.lineHeight}%;"></div>
         <div class="st-line-track" style="
-          top: ${this.properties.lineHeight}%; 
-          left: ${this.properties.leftBound}%; 
+          top: ${this.properties.lineHeight}%;
+          left: ${this.properties.leftBound}%;
           right: ${100 - this.properties.rightBound}%;
         "></div>
       </div>
@@ -151,7 +169,7 @@ const recomputeMinMax = (timeline: Timeline) => {
   timeline.properties.maxTime = max;
 };
 
-const minMaxTimes = <T>(events: TimelineInputEvent<T>[]) => {
+const minMaxTimes = (events: TimelineInputEvent[]) => {
   let min = Infinity;
   let max = 0;
   for (const event of events) {
@@ -162,13 +180,13 @@ const minMaxTimes = <T>(events: TimelineInputEvent<T>[]) => {
   return { min, max };
 };
 
-const sortEvents = <T>(events: TimelineInputEvent<T>[]) => {
+const sortEvents = (events: TimelineInputEvent[]) => {
   events.sort((a, b) => (a.date.getTime() > b.date.getTime() ? 1 : -1));
 };
 
-const attachMouseEvent = <T>(
-  timeline: Timeline<T>,
-  handler: TimelineMouseEventHandler<T>
+const attachMouseEvent = (
+  timeline: Timeline,
+  handler: TimelineMouseEventHandler
 ) => {
   timeline.elements.timeline[`on${handler.name}`] = (
     mouseEvent: MouseEvent

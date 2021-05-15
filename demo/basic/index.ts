@@ -16,29 +16,41 @@ const myEvents: MyEvent[] = [
   },
   {
     id: 2,
-    date: "2021-06-15",
+    date: "2021-06-03",
     description: "Second event has a lot of text",
     color: "#2196F3",
   },
   {
     id: 3,
-    date: "2021-06-27",
+    date: "2021-07-02",
     description: "Third event has even more text then the previous one",
     color: "#4CAF50",
   },
   {
     id: 4,
-    date: "2021-07-18",
+    date: "2021-07-20",
     description: "Fourth",
     color: "#673AB7",
   },
+  {
+    id: 5,
+    date: "2021-07-26",
+    description: "A fifth one here",
+    color: "#F44336",
+  },
+  {
+    id: 6,
+    date: "2021-08-10",
+    description: "And finally, a sixth one",
+    color: "#3F51B5",
+  },
 ];
 
-const events: TimelineInputEvent<MyEvent>[] = myEvents.map((event, i) => ({
-  date: new Date(event.date),
-  description: event.description,
-  color: event.color,
-  custom: event,
+const events: TimelineInputEvent<MyEvent>[] = myEvents.map((myEvent, i) => ({
+  date: new Date(myEvent.date),
+  description: myEvent.description,
+  color: myEvent.color,
+  custom: myEvent,
   // placement: "bottom",
   // placement: i % 2 == 1 ? "top" : "bottom",
   mouseEvents: {
@@ -60,6 +72,8 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((event, i) => ({
 const timeline = new Timeline({
   container: document.querySelector("#timeline"),
   events: events,
+  lineHeight: 50,
+  height: "500px",
   // alternate: false,
   // formatter: (event) => {
   //   const date = event.date.toLocaleDateString(undefined, {
