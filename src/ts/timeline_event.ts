@@ -1,6 +1,7 @@
 import { Color } from "./shared/colors";
-import { updateAllEventPositions, Timeline } from "./timeline";
-import { parseDiv, mapValue, randomString } from "./shared/utils";
+import { updateAllEvents, Timeline } from "./timeline";
+import { parseDiv, randomString } from "./shared/utils";
+import { Point } from "./point";
 
 export type TimelineEventPlacement = "top" | "right" | "bottom" | "left";
 
@@ -8,7 +9,7 @@ export type TimelineInputEvent<T = any> = {
   date: Date;
   description?: string;
   color?: string;
-  custom?: T;
+  data?: T;
   placement?: TimelineEventPlacement;
 };
 
@@ -20,9 +21,12 @@ export type TimelineEventOptions<T = any> = TimelineInputEvent<T> & {
 type TimelineEventElements = {
   event?: HTMLDivElement;
   label?: HTMLDivElement;
-  wrapper?: HTMLDivElement;
   point?: HTMLDivElement;
   line?: HTMLDivElement;
+};
+
+export type TimelineEventProperties = {
+  pointPosition?: Point;
 };
 
 export class TimelineEvent<T = any> {
@@ -30,7 +34,7 @@ export class TimelineEvent<T = any> {
   date: Date;
   description: string;
   color: string;
-  custom: T;
+  data: T;
   placement: TimelineEventPlacement;
 
   // TimelineEventOptions properties
@@ -38,6 +42,7 @@ export class TimelineEvent<T = any> {
   index: number;
 
   // Other properties
+  properties: TimelineEventProperties = {};
   readonly elements: TimelineEventElements = {};
   readonly ref = randomString(8); // Unique identifier for an event
 
@@ -50,7 +55,7 @@ export class TimelineEvent<T = any> {
     // Other options
     this.description = options.description ?? defaultDescription;
     this.color = options.color ?? defaultColor;
-    this.custom = options.custom;
+    this.data = options.data;
     this.index = options.index ?? -1;
 
     if (this.timeline.alternate) {
@@ -112,8 +117,8 @@ export class TimelineEvent<T = any> {
       updateColor = true;
       reformat = true;
     }
-    if ("custom" in newValues) {
-      this.custom = newValues.custom;
+    if ("data" in newValues) {
+      this.data = newValues.data;
       reformat = true;
       updateColor = true;
       updatePosition = true;
@@ -132,7 +137,7 @@ export class TimelineEvent<T = any> {
       this.elements.line.style.color = this.color;
     }
     if (updatePosition) {
-      updateAllEventPositions(this.timeline);
+      updateAllEvents(this.timeline);
     }
     if (updatePlacement && !updatePosition) {
       updateEventPlacement(this);
@@ -144,11 +149,34 @@ export class TimelineEvent<T = any> {
     this.timeline.events.splice(index, 1);
     this.elements.event.remove();
     this.elements.point.remove();
-    updateAllEventPositions(this.timeline);
+    updateAllEvents(this.timeline);
   }
 }
 
 // Private API
+
+export const updateEventProperties = (event: TimelineEvent) => {
+  const { minTime, maxTime, startPoint, endPoint } = event.timeline.properties;
+
+  const time = event.date.getTime();
+  const oneEvent = event.timeline.events.length == 1;
+  const lerpAmount = oneEvent ? 0.5 : (time - minTime) / (maxTime - minTime);
+
+  event.properties.pointPosition = Point.lerp(startPoint, endPoint, lerpAmount);
+};
+
+export const updateEventPosition = (event: TimelineEvent) => {
+  const { pointPosition: position } = event.properties;
+
+  const left = position.x + "px";
+  const top = position.y + "px";
+
+  event.elements.event.style.left = left;
+  event.elements.event.style.top = top;
+
+  event.elements.point.style.left = left;
+  event.elements.point.style.top = top;
+};
 
 export const updateEventPlacement = (event: TimelineEvent) => {
   if (event.timeline.alternate) {
@@ -161,29 +189,6 @@ export const updateEventPlacement = (event: TimelineEvent) => {
     "st-left"
   );
   event.elements.event.classList.add(`st-${event.placement}`);
-};
-
-export const updateEventPosition = (event: TimelineEvent) => {
-  const props = event.timeline.properties;
-
-  const x =
-    event.timeline.events.length == 1
-      ? "50%"
-      : mapValue(
-          event.date.getTime(),
-          props.minTime,
-          props.maxTime,
-          props.leftBound,
-          props.rightBound
-        ) + "%";
-
-  const y = props.lineHeight + "%";
-
-  event.elements.event.style.left = x;
-  event.elements.event.style.top = y;
-
-  event.elements.point.style.left = x;
-  event.elements.point.style.top = y;
 };
 
 // Default options

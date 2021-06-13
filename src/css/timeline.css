@@ -6,6 +6,7 @@
   overflow: hidden;
 
   --st-event-line-length: 40px;
+  --transition: 0.3s ease-out;
 }
 
 .st-line {
@@ -16,14 +17,16 @@
   height: 1px;
   background-color: lightgray;
   transform: translateY(-50%);
+  transition: var(--transition);
 }
 
-.st-line-track {
+.st-track {
   box-sizing: border-box;
   position: absolute;
   height: 4px;
   background-color: lightgray;
   transform: translateY(-50%);
+  transition: var(--transition);
 }
 
 .st-event {
@@ -33,10 +36,10 @@
   box-sizing: border-box;
   position: absolute;
   transform: translate(-50%, -100%);
-  transition: 0.3s ease-out;
+  transition: var(--transition);
   /* IMPORTANT (width & max-width) */
   width: max-content;
-  max-width: 25%;
+  max-width: 250px;
 }
 
 .st-event-label {
@@ -59,7 +62,7 @@
   background-color: currentColor;
   margin: 0 auto;
   transform: translate(-50%, -50%);
-  transition: 0.3s ease-out;
+  transition: var(--transition);
   z-index: 1;
 }
 
@@ -73,6 +76,7 @@
   width: 1px;
   height: var(--st-event-line-length);
   background-color: currentColor;
+  transition: var(--transition);
 }
 
 /* Other positions */

@@ -1,23 +1,13 @@
-export function mapValue(
-  value: number,
-  in_min: number,
-  in_max: number,
-  out_min: number,
-  out_max: number
-) {
-  return ((value - in_min) * (out_max - out_min)) / (in_max - in_min) + out_min;
-}
-
-export function createDiv(className = "", parent?: Element) {
+export const createDiv = function (className = "", parent?: Element) {
   const div = document.createElement("div");
   if (className) {
     div.className = className;
   }
   parent?.appendChild(div);
   return div;
-}
+};
 
-export function parseDiv(html: string): HTMLDivElement {
+export const parseDiv = function (html: string): HTMLDivElement {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = html;
   if (wrapper.childElementCount == 1) {
@@ -25,9 +15,9 @@ export function parseDiv(html: string): HTMLDivElement {
   } else {
     return wrapper;
   }
-}
+};
 
-export function randomString(length: number): string {
+export const randomString = function (length: number): string {
   const result = Array.from({ length });
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -37,4 +27,40 @@ export function randomString(length: number): string {
     result.push(characters.charAt(index));
   }
   return result.join("");
+};
+
+// Taken from : https://jsfiddle.net/rudiedirkx/p0ckdcnv/
+export const debounce = function (ms: number, fn: Function) {
+  let timer: NodeJS.Timeout;
+  return function () {
+    clearTimeout(timer);
+    const args = Array.prototype.slice.call(arguments);
+    args.unshift(this);
+    timer = setTimeout(fn.bind.apply(fn, args), ms);
+  };
+};
+
+// Taken from : https://medium.com/@fsufitch/is-javascript-array-sort-stable-46b90822543f
+interface Comparator<T> {
+  (a: T, b: T): number;
 }
+const defaultComparator: Comparator<any> = (a, b) => {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+};
+export const stableSort = function <T>(
+  array: T[],
+  comparator: Comparator<T> = defaultComparator
+) {
+  const stabilized = array.map((el, index) => <[T, number]>[el, index]);
+  const stableCmp: Comparator<[T, number]> = (a, b) => {
+    const order = comparator(a[0], b[0]);
+    if (order != 0) return order;
+    return a[1] - b[1];
+  };
+  stabilized.sort(stableCmp);
+  for (let i = 0; i < array.length; i++) {
+    array[i] = stabilized[i][0];
+  }
+};

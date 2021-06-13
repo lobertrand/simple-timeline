@@ -1,11 +1,14 @@
-import { createDiv } from "./shared/utils";
+import { createDiv, debounce, stableSort } from "./shared/utils";
 import {
   updateEventPosition,
   updateEventPlacement,
   TimelineEvent,
   TimelineInputEvent,
+  updateEventProperties,
 } from "./timeline_event";
 import { Color } from "./shared/colors";
+import { Point } from "./point";
+import { computeAllEventLineHeights } from "./measurements";
 
 export type TimelineOptions<T = any> = {
   events?: TimelineInputEvent<T>[];
@@ -23,17 +26,12 @@ export type TimelineOptions<T = any> = {
    * (default: `"100%"`)
    */
   height?: string;
-  /**
-   * Height of the timeline line in percentage of the timeline's height
-   * (default: 50)
-   */
-  lineHeight?: number;
 };
 
 type TimelineElements = {
   timeline?: HTMLDivElement;
   line?: HTMLDivElement;
-  lineTrack?: HTMLDivElement;
+  track?: HTMLDivElement;
 };
 
 type TimelineMouseEventHandler<T = any> = (
@@ -46,12 +44,16 @@ type TimelineMouseEvents<T = any> = {
   mouseover?: TimelineMouseEventHandler<T>;
 };
 
-type TimelineProperties = {
+export type TimelineProperties = {
   minTime?: number;
   maxTime?: number;
-  leftBound?: number;
-  rightBound?: number;
-  lineHeight?: number;
+  leftBound?: number; // 0..1
+  rightBound?: number; // 0..1
+  lineHeight?: number; // px
+  width?: number; // px
+  height?: number; // px
+  startPoint?: Point;
+  endPoint?: Point;
 };
 
 export class Timeline<T = any> {
@@ -74,32 +76,22 @@ export class Timeline<T = any> {
     const mouseEvents = options.mouseEvents ?? {};
     const width = options.width ?? "100%";
     const height = options.height ?? "100%";
-    const lineHeight = options.lineHeight ?? 50;
-
-    const { min, max } = minMaxTimes(inputEvents);
-
-    this.properties = {
-      lineHeight: lineHeight,
-      leftBound: 15,
-      rightBound: 85,
-      minTime: min,
-      maxTime: max,
-    };
+    // const lineHeight = options.lineHeight ?? 50;
 
     // Building elements
     this.container.innerHTML = /*html*/ `
       <div class="st" style="width: ${width}; height: ${height}; position: relative;">
-        <div class="st-line" style="top: ${this.properties.lineHeight}%;"></div>
-        <div class="st-line-track" style="
-          top: ${this.properties.lineHeight}%;
-          left: ${this.properties.leftBound}%;
-          right: ${100 - this.properties.rightBound}%;
-        "></div>
+        <div class="st-line"></div>
+        <div class="st-track"></div>
       </div>
     `;
     this.elements.timeline = this.container.querySelector(".st");
     this.elements.line = this.container.querySelector(".st-line");
-    this.elements.lineTrack = this.container.querySelector(".st-line-track");
+    this.elements.track = this.container.querySelector(".st-track");
+
+    // Computing timeline dimensions updating positions
+    updateTimelineProperties(this);
+    updateTimelinePositions(this);
 
     // Building events
     sortEvents(inputEvents);
@@ -111,7 +103,12 @@ export class Timeline<T = any> {
       });
     });
 
-    updateAllEventPositions(this);
+    updateAllEvents(this);
+
+    const resizeObserver = new ResizeObserver(
+      debounce(200, () => onTimelineResize(this))
+    );
+    resizeObserver.observe(this.elements.timeline);
 
     // Mouse events
     if (mouseEvents.click) {
@@ -133,7 +130,7 @@ export class Timeline<T = any> {
       );
     });
     // Recompute all positions once
-    updateAllEventPositions(this);
+    updateAllEvents(this);
   }
 
   setEvents(newEventOptions: TimelineInputEvent<T>[]) {
@@ -151,17 +148,58 @@ export class Timeline<T = any> {
 
 // Private API
 
-export const updateAllEventPositions = (timeline: Timeline) => {
+export const updateAllEvents = (timeline: Timeline) => {
   recomputeMinMax(timeline);
   sortEvents(timeline.events);
   timeline.events.forEach((event, i) => {
     event.index = i;
+    updateEventProperties(event);
     updateEventPosition(event);
     updateEventPlacement(event);
+  });
+
+  const lineHeights = computeAllEventLineHeights(timeline.events);
+  lineHeights.forEach(({ event, lineHeight }) => {
+    event.elements.line.style.height = lineHeight + "px";
   });
 };
 
 // Helper functions
+
+const onTimelineResize = (timeline: Timeline) => {
+  updateTimelineProperties(timeline);
+  updateTimelinePositions(timeline);
+  updateAllEvents(timeline);
+};
+
+const updateTimelineProperties = (timeline: Timeline) => {
+  timeline.properties.width = timeline.elements.timeline.offsetWidth;
+  timeline.properties.height = timeline.elements.timeline.offsetHeight;
+
+  timeline.properties.lineHeight = timeline.properties.height * 0.5;
+  timeline.properties.leftBound = 0.15;
+  timeline.properties.rightBound = 0.85;
+
+  timeline.properties.startPoint = new Point(
+    timeline.properties.width * timeline.properties.leftBound,
+    timeline.properties.lineHeight
+  );
+  timeline.properties.endPoint = new Point(
+    timeline.properties.width * timeline.properties.rightBound,
+    timeline.properties.lineHeight
+  );
+};
+
+const updateTimelinePositions = (timeline: Timeline) => {
+  const { startPoint, endPoint } = timeline.properties;
+
+  // Placing line and track
+  timeline.elements.line.style.top = startPoint.y + "px";
+  timeline.elements.track.style.top = startPoint.y + "px";
+  timeline.elements.track.style.left = startPoint.x + "px";
+  timeline.elements.track.style.right =
+    timeline.properties.width - endPoint.x + "px";
+};
 
 const recomputeMinMax = (timeline: Timeline) => {
   const { min, max } = minMaxTimes(timeline.events);
@@ -181,7 +219,7 @@ const minMaxTimes = (events: TimelineInputEvent[]) => {
 };
 
 const sortEvents = (events: TimelineInputEvent[]) => {
-  events.sort((a, b) => (a.date.getTime() > b.date.getTime() ? 1 : -1));
+  stableSort(events, (a, b) => (a.date.getTime() > b.date.getTime() ? 1 : -1));
 };
 
 const attachMouseEvent = (

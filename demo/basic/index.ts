@@ -11,38 +11,57 @@ const myEvents: MyEvent[] = [
   {
     id: 1,
     date: "2021-05-05",
-    description: "First event is simple",
+    description: "These are simple words",
     color: "#FF9800",
   },
   {
     id: 2,
-    date: "2021-06-03",
-    description: "Second event has a lot of text",
-    color: "#2196F3",
+    date: "2021-05-22",
+    description: "Every moment is a fresh beginning",
+    color: "#FF9800",
   },
   {
     id: 3,
-    date: "2021-07-02",
-    description: "Third event has even more text then the previous one",
-    color: "#4CAF50",
+    date: "2021-06-03",
+    description: "Change the world by being yourself",
+    color: "#2196F3",
   },
   {
     id: 4,
-    date: "2021-07-20",
-    description: "Fourth",
-    color: "#673AB7",
+    date: "2021-06-10",
+    description: "Hello world",
+    color: "#2196F3",
   },
   {
     id: 5,
-    date: "2021-07-26",
-    description: "A fifth one here",
-    color: "#F44336",
+    date: "2021-07-02",
+    description: `One day the people that don’t even believe in
+                  you will tell everyone how they met you`,
+    color: "#4CAF50",
   },
   {
     id: 6,
+    date: "2021-07-20",
+    description: "Goodbye",
+    color: "#673AB7",
+  },
+  {
+    id: 7,
+    date: "2021-07-26",
+    description: "And still, I rise",
+    color: "#F44336",
+  },
+  {
+    id: 8,
     date: "2021-08-10",
-    description: "And finally, a sixth one",
+    description: "Be so good they can’t ignore you",
     color: "#3F51B5",
+  },
+  {
+    id: 9,
+    date: "2021-08-11",
+    description: "Don't worry",
+    color: "red",
   },
 ];
 
@@ -50,30 +69,15 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((myEvent, i) => ({
   date: new Date(myEvent.date),
   description: myEvent.description,
   color: myEvent.color,
-  custom: myEvent,
+  data: myEvent,
   // placement: "bottom",
   // placement: i % 2 == 1 ? "top" : "bottom",
-  mouseEvents: {
-    // Déplacer la mise en place du listener dans la timeline !!!
-    // Sinon, les nouveaux événements ajoutés n'ont pas le listener
-    // click(event) {
-    //   // const e = random(myEvents);
-    //   // event.update({
-    //   //   // color: e.color,
-    //   //   // description: e.description,
-    //   //   date: addDays(event.date, 20),
-    //   //   // custom: e,
-    //   // });
-    //   event.delete();
-    // },
-  },
 }));
 
 const timeline = new Timeline({
   container: document.querySelector("#timeline"),
   events: events,
-  lineHeight: 50,
-  height: "500px",
+  height: "80vh",
   // alternate: false,
   // formatter: (event) => {
   //   const date = event.date.toLocaleDateString(undefined, {
@@ -82,7 +86,7 @@ const timeline = new Timeline({
   //   });
   //   return /*html*/ `
   //     <div style="font-weight: bold; color: #777;">
-  //       <span style="color: ${event.color};">${event.custom.id} · </span>${date}
+  //       <span style="color: ${event.color};">${event.data.id} · </span>${date}
   //     </div>
   //     <div style="color: #777;">${event.description}</div>
   //   `;
@@ -103,7 +107,7 @@ const timeline = new Timeline({
       }
     },
     // mouseover(event) {
-    //   console.log("mouseover", event.custom.id);
+    //   console.log("mouseover", event.data.id);
     // }
   },
 });
@@ -122,7 +126,7 @@ button.onclick = () => {
       date: new Date(event.date),
       description: event.description,
       color: event.color,
-      custom: event,
+      data: event,
     },
   ]);
 };
