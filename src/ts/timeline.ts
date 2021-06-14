@@ -219,7 +219,7 @@ const minMaxTimes = (events: TimelineInputEvent[]) => {
 };
 
 const sortEvents = (events: TimelineInputEvent[]) => {
-  stableSort(events, (a, b) => (a.date.getTime() > b.date.getTime() ? 1 : -1));
+  stableSort(events, (a, b) => a.date.getTime() - b.date.getTime());
 };
 
 const attachMouseEvent = (

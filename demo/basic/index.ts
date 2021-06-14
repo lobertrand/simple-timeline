@@ -18,7 +18,7 @@ const myEvents: MyEvent[] = [
     id: 2,
     date: "2021-05-22",
     description: "Every moment is a fresh beginning",
-    color: "#FF9800",
+    color: "#009688",
   },
   {
     id: 3,
@@ -30,7 +30,7 @@ const myEvents: MyEvent[] = [
     id: 4,
     date: "2021-06-10",
     description: "Hello world",
-    color: "#2196F3",
+    color: "#FFC107",
   },
   {
     id: 5,
@@ -59,9 +59,9 @@ const myEvents: MyEvent[] = [
   },
   {
     id: 9,
-    date: "2021-08-11",
+    date: "2021-08-10",
     description: "Don't worry",
-    color: "red",
+    color: "#795548",
   },
 ];
 
@@ -132,6 +132,9 @@ button.onclick = () => {
 };
 
 console.log(timeline);
+console.log(timeline.events[timeline.events.length - 1].description);
+console.log(timeline.events[timeline.events.length - 2].description);
+
 
 function random<T>(array: T[]): T {
   const index = Math.floor(Math.random() * array.length);
