@@ -10,11 +10,16 @@
     <div class="container">
       <h1>Basic timeline demonstration</h1>
       <div class="card">
-        <div id="timeline"></div>
+        <div id="timeline" style="height: 500px"></div>
       </div>
       <div class="flex justify-between pt-2 pb-1">
         <h2 id="date" class="m-0"></h2>
-        <button id="add-event-button" class="button">+ Add Random Event</button>
+        <div>
+          <button id="randomize-button" class="button">Randomize</button>
+          <button id="add-event-button" class="button">
+            + Add Random Event
+          </button>
+        </div>
       </div>
       <p id="description" class="m-0"></p>
     </div>
@@ -116,11 +121,7 @@
       user-select: none;
     }
 
-    .st-event-label:hover {
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-    }
-
-    .st-event-point {
+    /* .st-event-point {
       cursor: pointer;
     }
 
@@ -132,7 +133,6 @@
       padding: 0;
       cursor: pointer;
       border-radius: 10px;
-      transition: 0.2s;
     }
 
     .st-event-label div {
@@ -141,6 +141,6 @@
 
     .st-event-label div:first-child {
       border-bottom: 1px solid lightgray;
-    }
+    } */
   </style>
 </html>

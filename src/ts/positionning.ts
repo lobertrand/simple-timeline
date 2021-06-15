@@ -1,39 +1,45 @@
-import { stableSort } from "./shared/utils";
+import { iterateInterlaced, partition, stableSort } from "./shared/utils";
 import { TimelineEvent, TimelineEventPlacement } from "./timeline_event";
 
-export const computeAllEventLineHeights = function (events: TimelineEvent[]) {
-  // For the moment we don't consider "left" and "right" placements
-  const topLineHeights = lineHeightsForPlacement(events, "top");
-  const bottomLineHeights = lineHeightsForPlacement(events, "bottom");
-  return topLineHeights.concat(bottomLineHeights);
+type TimelineEventProperties = {
+  event: TimelineEvent;
+  labelLeft: number;
+  labelRight: number;
+  labelTop: number;
+  labelBottom: number;
+  lineHeight: number;
+  lineTop: number;
 };
 
-const lineHeightsForPlacement = function (
+export const computeEventPositions = function (
+  events: TimelineEvent[]
+): TimelineEventProperties[] {
+  // For the moment we don't consider "left" and "right" placements
+  const [topPlaced, bottomPlaced] = partition(
+    events,
+    (e) => e.placement === "top",
+    (e) => e.placement === "bottom"
+  );
+  const topPositions = eventPositionsByPlacement(topPlaced, "top");
+  const bottomPositions = eventPositionsByPlacement(bottomPlaced, "bottom");
+  return topPositions.concat(bottomPositions);
+};
+
+const eventPositionsByPlacement = function (
   events: TimelineEvent[],
   placement: TimelineEventPlacement
-) {
-  const filteredEvents = events.filter((e) => e.placement === placement);
-
-  type EventProperties = {
-    event: TimelineEvent;
-    labelLeft: number;
-    labelRight: number;
-    labelTop: number;
-    labelBottom: number;
-    lineHeight: number;
-  };
-
-  const placedEvents: EventProperties[] = [];
+): TimelineEventProperties[] {
+  const placedEvents: TimelineEventProperties[] = [];
   const vGap = 8; // px
   const hGap = 0; // px
 
-  for (const event of filteredEvents) {
+  for (const event of iterateInterlaced(events)) {
     const { pointPosition } = event.properties;
     const { offsetWidth, offsetHeight } = event.elements.label;
 
     // Starting position
     const lineHeight = 30; // px
-    const current = {
+    const current: TimelineEventProperties = {
       event,
       labelLeft: pointPosition.x - offsetWidth / 2,
       labelRight: pointPosition.x + offsetWidth / 2,
@@ -46,6 +52,8 @@ const lineHeightsForPlacement = function (
           ? pointPosition.y - lineHeight
           : pointPosition.y + lineHeight + offsetHeight,
       lineHeight,
+      lineTop:
+        placement === "top" ? pointPosition.y - lineHeight : pointPosition.y,
     };
 
     // Select already placed events which are overlapping
@@ -82,6 +90,7 @@ const lineHeightsForPlacement = function (
           // Update current vertical position
           current.labelTop += diff;
           current.labelBottom += diff;
+          current.lineTop += diff;
           current.lineHeight = pointPosition.y - current.labelBottom;
         } else {
           const newLabelTop = overlap.labelBottom + vGap;
@@ -90,7 +99,6 @@ const lineHeightsForPlacement = function (
           // Update current vertical position
           current.labelTop += diff;
           current.labelBottom += diff;
-
           current.lineHeight = current.labelTop - pointPosition.y;
         }
       }
@@ -99,8 +107,5 @@ const lineHeightsForPlacement = function (
     placedEvents.push(current);
   }
 
-  return placedEvents.map(({ event, lineHeight }) => ({
-    event,
-    lineHeight,
-  }));
+  return placedEvents;
 };

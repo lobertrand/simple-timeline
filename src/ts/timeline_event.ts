@@ -3,7 +3,7 @@ import { updateAllEvents, Timeline } from "./timeline";
 import { parseDiv, randomString } from "./shared/utils";
 import { Point } from "./point";
 
-export type TimelineEventPlacement = "top" | "right" | "bottom" | "left";
+export type TimelineEventPlacement = "top" | "bottom";
 
 export type TimelineInputEvent<T = any> = {
   date: Date;
@@ -19,10 +19,9 @@ export type TimelineEventOptions<T = any> = TimelineInputEvent<T> & {
 };
 
 type TimelineEventElements = {
-  event?: HTMLDivElement;
   label?: HTMLDivElement;
-  point?: HTMLDivElement;
   line?: HTMLDivElement;
+  point?: HTMLDivElement;
 };
 
 export type TimelineEventProperties = {
@@ -65,19 +64,16 @@ export class TimelineEvent<T = any> {
     }
 
     // Building elements
-    this.elements.event = parseDiv(/*html*/ `
-      <div class="st-event st-${this.placement}">
-        <div class="st-event-label" data-st-event-ref="${this.ref}">
-          ${this.timeline.formatter(this)}
-        </div>
-        <div class="st-event-line" style="color: ${this.color};"
-             data-st-event-ref="${this.ref}">
-        </div>
+    this.elements.label = parseDiv(/*html*/ `
+      <div class="st-event-label" data-st-event-ref="${this.ref}">
+        ${this.timeline.formatter(this)}
       </div>
     `);
-    this.elements.label = this.elements.event.querySelector(".st-event-label");
-    this.elements.line = this.elements.event.querySelector(".st-event-line");
-
+    this.elements.line = parseDiv(/*html*/ `
+      <div class="st-event-line" style="color: ${this.color};"
+           data-st-event-ref="${this.ref}">
+      </div>
+    `);
     this.elements.point = parseDiv(/*html*/ `
       <div class="st-event-point" style="color: ${this.color};"
            data-st-event-ref="${this.ref}">
@@ -85,7 +81,8 @@ export class TimelineEvent<T = any> {
     `);
 
     this.timeline.elements.timeline.append(
-      this.elements.event,
+      this.elements.label,
+      this.elements.line,
       this.elements.point
     );
   }
@@ -111,6 +108,7 @@ export class TimelineEvent<T = any> {
     if ("description" in newValues) {
       this.description = newValues.description ?? defaultDescription;
       reformat = true;
+      updatePosition = true;
     }
     if ("color" in newValues) {
       this.color = newValues.color ?? defaultColor;
@@ -126,6 +124,7 @@ export class TimelineEvent<T = any> {
     if ("placement" in newValues) {
       this.placement = newValues.placement;
       updatePlacement = true;
+      updatePosition = true;
     }
 
     // Update UI
@@ -147,7 +146,9 @@ export class TimelineEvent<T = any> {
   delete() {
     const index = this.timeline.events.indexOf(this);
     this.timeline.events.splice(index, 1);
-    this.elements.event.remove();
+    // this.elements.event.remove();
+    this.elements.label.remove();
+    this.elements.line.remove();
     this.elements.point.remove();
     updateAllEvents(this.timeline);
   }
@@ -166,13 +167,19 @@ export const updateEventProperties = (event: TimelineEvent) => {
 };
 
 export const updateEventPosition = (event: TimelineEvent) => {
-  const { pointPosition: position } = event.properties;
+  const { pointPosition } = event.properties;
 
-  const left = position.x + "px";
-  const top = position.y + "px";
+  const left = pointPosition.x + "px";
+  const top = pointPosition.y + "px";
 
-  event.elements.event.style.left = left;
-  event.elements.event.style.top = top;
+  // event.elements.event.style.left = left;
+  // event.elements.event.style.top = top;
+
+  event.elements.label.style.left = left;
+  event.elements.label.style.top = top;
+
+  event.elements.line.style.left = left;
+  event.elements.line.style.top = top;
 
   event.elements.point.style.left = left;
   event.elements.point.style.top = top;
@@ -182,13 +189,13 @@ export const updateEventPlacement = (event: TimelineEvent) => {
   if (event.timeline.alternate) {
     event.placement = event.index % 2 == 0 ? "top" : "bottom";
   }
-  event.elements.event.classList.remove(
-    "st-top",
-    "st-right",
-    "st-bottom",
-    "st-left"
-  );
-  event.elements.event.classList.add(`st-${event.placement}`);
+  // event.elements.event.classList.remove(
+  //   "st-top",
+  //   "st-right",
+  //   "st-bottom",
+  //   "st-left"
+  // );
+  // event.elements.event.classList.add(`st-${event.placement}`);
 };
 
 // Default options

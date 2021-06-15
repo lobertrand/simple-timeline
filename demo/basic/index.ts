@@ -77,7 +77,6 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((myEvent, i) => ({
 const timeline = new Timeline({
   container: document.querySelector("#timeline"),
   events: events,
-  height: "80vh",
   // alternate: false,
   // formatter: (event) => {
   //   const date = event.date.toLocaleDateString(undefined, {
@@ -113,8 +112,14 @@ const timeline = new Timeline({
 });
 const desc = document.querySelector("#description") as HTMLParagraphElement;
 const date = document.querySelector("#date") as HTMLHeadingElement;
-const button = document.querySelector("#add-event-button") as HTMLButtonElement;
-button.onclick = () => {
+const addEventBtn = document.querySelector(
+  "#add-event-button"
+) as HTMLButtonElement;
+const randomizeBtn = document.querySelector(
+  "#randomize-button"
+) as HTMLButtonElement;
+
+addEventBtn.onclick = () => {
   const event = {
     id: 5,
     date: randomDateString("2020-01-01", "2023-01-01"),
@@ -131,10 +136,16 @@ button.onclick = () => {
   ]);
 };
 
-console.log(timeline);
-console.log(timeline.events[timeline.events.length - 1].description);
-console.log(timeline.events[timeline.events.length - 2].description);
+randomizeBtn.onclick = () => {
+  const descriptions = timeline.events.map((e) => e.description);
 
+  shuffle(descriptions);
+  timeline.events.forEach((event, idx) => {
+    event.update({ description: descriptions[idx] });
+  });
+};
+
+console.log(timeline);
 
 function random<T>(array: T[]): T {
   const index = Math.floor(Math.random() * array.length);
@@ -160,4 +171,11 @@ function addDays(date: Date, n: number): Date {
   const newDate = new Date(date);
   newDate.setDate(newDate.getDate() + n);
   return newDate;
+}
+
+function shuffle<T>(array: T[]) {
+  for (let i = array.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
 }

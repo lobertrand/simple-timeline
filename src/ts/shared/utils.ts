@@ -64,3 +64,37 @@ export const stableSort = function <T>(
     array[i] = stabilized[i][0];
   }
 };
+
+export const partition = function <T>(
+  array: T[],
+  ...predicates: ((elt: T) => boolean)[]
+) {
+  const result: T[][] = Array.from({ length: predicates.length + 1 }).map(
+    () => []
+  );
+
+  for (const element of array) {
+    let matched = false;
+    for (let i = 0; i < predicates.length; i++) {
+      if (predicates[i](element)) {
+        result[i].push(element);
+        matched = true;
+        break;
+      }
+    }
+    if (!matched) {
+      result[result.length - 1].push(element);
+    }
+  }
+
+  return result;
+};
+
+export const iterateInterlaced = function* <T>(array: T[]) {
+  for (let i = 0; i < array.length; i += 2) {
+    yield array[i];
+  }
+  for (let i = 1; i < array.length; i += 2) {
+    yield array[i];
+  }
+};

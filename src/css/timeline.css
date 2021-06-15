@@ -6,7 +6,7 @@
   overflow: hidden;
 
   --st-event-line-length: 40px;
-  --transition: 0.3s ease-out;
+  --st-transition: 0.3s ease-out;
 }
 
 .st-line {
@@ -17,7 +17,7 @@
   height: 1px;
   background-color: lightgray;
   transform: translateY(-50%);
-  transition: var(--transition);
+  transition: var(--st-transition);
 }
 
 .st-track {
@@ -26,23 +26,11 @@
   height: 4px;
   background-color: lightgray;
   transform: translateY(-50%);
-  transition: var(--transition);
-}
-
-.st-event {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-  position: absolute;
-  transform: translate(-50%, -100%);
-  transition: var(--transition);
-  /* IMPORTANT (width & max-width) */
-  width: max-content;
-  max-width: 250px;
+  transition: var(--st-transition);
 }
 
 .st-event-label {
+  position: absolute;
   box-sizing: border-box;
   display: inline-block;
   padding: 8px 12px;
@@ -50,6 +38,21 @@
   border: 1px solid lightgray;
   background-color: white;
   font-size: 16px;
+  transition: var(--st-transition);
+  width: max-content;
+  max-width: 250px;
+  z-index: 3;
+}
+
+.st-event-line {
+  position: absolute;
+  box-sizing: border-box;
+  width: 2px;
+  height: var(--st-event-line-length);
+  transform: translateX(-50%);
+  background-color: currentColor;
+  transition: var(--st-transition);
+  z-index: 1;
 }
 
 .st-event-point {
@@ -62,21 +65,12 @@
   background-color: currentColor;
   margin: 0 auto;
   transform: translate(-50%, -50%);
-  transition: var(--transition);
-  z-index: 1;
+  transition: var(--st-transition);
+  z-index: 2;
 }
 
 .st-event-point:hover {
   transform: translate(-50%, -50%) scale(1.3);
-}
-
-.st-event-line {
-  flex-shrink: 0;
-  box-sizing: border-box;
-  width: 1px;
-  height: var(--st-event-line-length);
-  background-color: currentColor;
-  transition: var(--transition);
 }
 
 /* Other positions */
