@@ -13,16 +13,6 @@ export type TimelineOptions<T = any> = {
   formatter?: (event: TimelineEvent<T>) => string;
   alternate?: boolean;
   mouseEvents?: TimelineMouseEvents<T>;
-  /**
-   * Width of the timeline element (not the container) as a string
-   * (default: `"100%"`)
-   */
-  width?: string;
-  /**
-   * Height of the timeline element (not the container) as a string
-   * (default: `"100%"`)
-   */
-  height?: string;
 };
 
 type TimelineElements = {
@@ -58,13 +48,10 @@ export class Timeline<T = any> {
     this.container = options.container ?? defaultContainer();
     const inputEvents = Array.from(options.events ?? []);
     const mouseEvents = options.mouseEvents ?? {};
-    const width = options.width ?? "100%";
-    const height = options.height ?? "100%";
 
     // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st" style="width: ${width}; height: ${height};
-                             position: relative;">
+      <div class="st">
         <div class="st-line"></div>
         <div class="st-track"></div>
       </div>

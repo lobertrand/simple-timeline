@@ -75,7 +75,7 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((myEvent, i) => ({
 }));
 
 const timeline = new Timeline({
-  container: document.querySelector("#timeline"),
+  container: document.querySelector("#timeline-container"),
   events: events,
   // alternate: false,
   // formatter: (event) => {
