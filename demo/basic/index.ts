@@ -79,15 +79,18 @@ const timeline = new Timeline({
   events: events,
   // alternate: false,
   // formatter: (event) => {
-  //   const date = event.date.toLocaleDateString(undefined, {
-  //     day: "numeric",
-  //     month: "long",
-  //   });
+  //   const day = event.date.toLocaleDateString("fr-FR", { day: "numeric" });
+  //   const month = event.date.toLocaleDateString("fr-FR", { month: "short" });
   //   return /*html*/ `
-  //     <div style="font-weight: bold; color: #777;">
-  //       <span style="color: ${event.color};">${event.data.id} · </span>${date}
+  //     <div style="display: flex; align-items: center; align-items: stretch;
+  //       border: 1px solid ${event.color}; border-radius: 8px; overflow: hidden;">
+  //       <div style="color: ${event.color}; text-align: center; padding: 8px 12px;
+  //         background-color: ${event.color}0e">
+  //         <div style="font-weight: 800; line-height: 1; font-size: 24px;">${day}</div>
+  //         <div style="font-weight: 700; font-size: 12px;">${month}</div>
+  //       </div>
+  //       <div style="color: #555; padding: 8px 12px;">${event.description}</div>
   //     </div>
-  //     <div style="color: #777;">${event.description}</div>
   //   `;
   // },
   mouseEvents: {
@@ -120,9 +123,14 @@ const randomizeBtn = document.querySelector(
 ) as HTMLButtonElement;
 
 addEventBtn.onclick = () => {
+  const min = timeline.properties.minTime;
+  const max = timeline.properties.maxTime;
+  const rand = Math.floor(Math.random() * (max - min + 1) + min);
+  const d =  new Date(rand).toISOString().slice(0, 10);
+
   const event = {
     id: 5,
-    date: randomDateString("2020-01-01", "2023-01-01"),
+    date: d,
     description: "New Event",
     color: randomColor(),
   };

@@ -1,7 +1,7 @@
 import { Color } from "./shared/colors";
 import { updateAllEvents, Timeline } from "./timeline";
 import { parseDiv, randomString } from "./shared/utils";
-import { Point } from "./point";
+import { Point } from "./shapes";
 
 export type TimelineEventPlacement = "top" | "bottom";
 
@@ -12,6 +12,10 @@ export type TimelineInputEvent<T = any> = {
   data?: T;
   placement?: TimelineEventPlacement;
 };
+
+export type TimelineEventUpdateOptions<T = any> = Partial<
+  TimelineInputEvent<T>
+>;
 
 export type TimelineEventOptions<T = any> = TimelineInputEvent<T> & {
   timeline: Timeline<T>;
@@ -24,179 +28,181 @@ type TimelineEventElements = {
   point?: HTMLDivElement;
 };
 
-export type TimelineEventProperties = {
+type TimelineEventProperties = {
   pointPosition?: Point;
 };
 
 export class TimelineEvent<T = any> {
   // TimelineInputEvent properties
-  date: Date;
-  description: string;
-  color: string;
-  data: T;
-  placement: TimelineEventPlacement;
+  _date: Date;
+  _description: string;
+  _color: string;
+  _data: T;
+  _placement: TimelineEventPlacement;
 
   // TimelineEventOptions properties
-  timeline: Timeline<T>;
-  index: number;
+  _timeline: Timeline<T>;
+  _index: number;
 
   // Other properties
-  properties: TimelineEventProperties = {};
-  readonly elements: TimelineEventElements = {};
-  readonly ref = randomString(8); // Unique identifier for an event
+  _properties: TimelineEventProperties = {};
+  readonly _elements: TimelineEventElements = {};
+  readonly _ref = randomString(8); // Unique identifier for an event
 
   constructor(options: TimelineEventOptions<T>) {
     // Required options
-    this.timeline = options.timeline;
-    this.index = options.index;
-    this.date = options.date;
+    this._timeline = options.timeline;
+    this._date = options.date;
 
     // Other options
-    this.description = options.description ?? defaultDescription;
-    this.color = options.color ?? defaultColor;
-    this.data = options.data;
-    this.index = options.index ?? -1;
+    this._description = options.description ?? defaultDescription;
+    this._color = options.color ?? defaultColor;
+    this._data = options.data;
+    this._index = options.index ?? -1;
 
-    if (this.timeline.alternate) {
-      this.placement = this.index % 2 == 0 ? "top" : "bottom";
+    if (this._timeline.alternate) {
+      this._placement = this._index % 2 == 0 ? "top" : "bottom";
     } else {
-      this.placement = options.placement ?? "top";
+      this._placement = options.placement ?? "top";
     }
 
     // Building elements
-    this.elements.label = parseDiv(/*html*/ `
-      <div class="st-event-label" data-st-event-ref="${this.ref}">
-        ${this.timeline.formatter(this)}
+    this._elements.label = parseDiv(/*html*/ `
+      <div class="st-event-label" data-st-event-ref="${this._ref}">
+        ${this._timeline.formatter(this)}
       </div>
     `);
-    this.elements.line = parseDiv(/*html*/ `
+    this._elements.line = parseDiv(/*html*/ `
       <div class="st-event-line" style="color: ${this.color};"
-           data-st-event-ref="${this.ref}">
+           data-st-event-ref="${this._ref}">
       </div>
     `);
-    this.elements.point = parseDiv(/*html*/ `
+    this._elements.point = parseDiv(/*html*/ `
       <div class="st-event-point" style="color: ${this.color};"
-           data-st-event-ref="${this.ref}">
+           data-st-event-ref="${this._ref}">
       </div>
     `);
 
-    this.timeline.elements.timeline.append(
-      this.elements.label,
-      this.elements.line,
-      this.elements.point
+    this._timeline.elements.timeline.append(
+      this._elements.label,
+      this._elements.line,
+      this._elements.point
     );
   }
 
   /**
    * Update data of the event and refresh parts of the UI that need to change.
    */
-  update(newValues: Partial<TimelineInputEvent<T>>) {
-    let reformat = false;
+  update(options: TimelineEventUpdateOptions<T>) {
     let updateColor = false;
     let updatePosition = false;
-    let updatePlacement = false;
-
-    // Réfléchir aux valeurs par défaut : doit-on factoriser le code
-    // permettant de déterminer les valeurs par défaut ?
 
     // Update data
-    if ("date" in newValues) {
-      this.date = newValues.date;
-      reformat = true;
+    if ("date" in options) {
+      this._date = options.date;
       updatePosition = true;
     }
-    if ("description" in newValues) {
-      this.description = newValues.description ?? defaultDescription;
-      reformat = true;
+    if ("description" in options) {
+      this._description = options.description ?? defaultDescription;
       updatePosition = true;
     }
-    if ("color" in newValues) {
-      this.color = newValues.color ?? defaultColor;
+    if ("color" in options) {
+      this._color = options.color ?? defaultColor;
       updateColor = true;
-      reformat = true;
     }
-    if ("data" in newValues) {
-      this.data = newValues.data;
-      reformat = true;
+    if ("data" in options) {
+      this._data = options.data;
       updateColor = true;
       updatePosition = true;
     }
-    if ("placement" in newValues) {
-      this.placement = newValues.placement;
-      updatePlacement = true;
+    if ("placement" in options) {
+      this._placement = options.placement ?? "top";
       updatePosition = true;
     }
 
     // Update UI
-    if (reformat) {
-      this.elements.label.innerHTML = this.timeline.formatter(this);
-    }
+    this._elements.label.innerHTML = this._timeline.formatter(this);
     if (updateColor) {
-      this.elements.point.style.color = this.color;
-      this.elements.line.style.color = this.color;
+      this._elements.point.style.color = this._color;
+      this._elements.line.style.color = this._color;
     }
     if (updatePosition) {
-      updateAllEvents(this.timeline);
-    }
-    if (updatePlacement && !updatePosition) {
       updateEventPlacement(this);
+      updateAllEvents(this.timeline);
     }
   }
 
   delete() {
-    const index = this.timeline.events.indexOf(this);
-    this.timeline.events.splice(index, 1);
-    // this.elements.event.remove();
-    this.elements.label.remove();
-    this.elements.line.remove();
-    this.elements.point.remove();
+    const index = this._timeline.events.indexOf(this);
+    this._timeline.events.splice(index, 1);
+    this._elements.label.remove();
+    this._elements.line.remove();
+    this._elements.point.remove();
     updateAllEvents(this.timeline);
+  }
+
+  get date() {
+    return this._date;
+  }
+
+  get description() {
+    return this._description;
+  }
+
+  get color() {
+    return this._color;
+  }
+
+  get data() {
+    return this._data;
+  }
+
+  get placement() {
+    return this._placement;
+  }
+
+  get timeline() {
+    return this._timeline;
   }
 }
 
 // Private API
 
 export const updateEventProperties = (event: TimelineEvent) => {
-  const { minTime, maxTime, startPoint, endPoint } = event.timeline.properties;
+  const { minTime, maxTime, startPoint, endPoint } = event._timeline.properties;
 
-  const time = event.date.getTime();
-  const oneEvent = event.timeline.events.length == 1;
-  const lerpAmount = oneEvent ? 0.5 : (time - minTime) / (maxTime - minTime);
+  const time = event._date.getTime();
+  const onlyOne = event._timeline.events.length == 1;
+  const lerpAmount = onlyOne ? 0.5 : (time - minTime) / (maxTime - minTime);
 
-  event.properties.pointPosition = Point.lerp(startPoint, endPoint, lerpAmount);
+  event._properties.pointPosition = Point.lerp(
+    startPoint,
+    endPoint,
+    lerpAmount
+  );
 };
 
 export const updateEventPosition = (event: TimelineEvent) => {
-  const { pointPosition } = event.properties;
+  const { pointPosition } = event._properties;
 
   const left = pointPosition.x + "px";
   const top = pointPosition.y + "px";
 
-  // event.elements.event.style.left = left;
-  // event.elements.event.style.top = top;
+  event._elements.label.style.left = left;
+  event._elements.label.style.top = top;
 
-  event.elements.label.style.left = left;
-  event.elements.label.style.top = top;
+  event._elements.line.style.left = left;
+  event._elements.line.style.top = top;
 
-  event.elements.line.style.left = left;
-  event.elements.line.style.top = top;
-
-  event.elements.point.style.left = left;
-  event.elements.point.style.top = top;
+  event._elements.point.style.left = left;
+  event._elements.point.style.top = top;
 };
 
 export const updateEventPlacement = (event: TimelineEvent) => {
-  if (event.timeline.alternate) {
-    event.placement = event.index % 2 == 0 ? "top" : "bottom";
+  if (event._timeline.alternate) {
+    event._placement = event._index % 2 == 0 ? "top" : "bottom";
   }
-  // event.elements.event.classList.remove(
-  //   "st-top",
-  //   "st-right",
-  //   "st-bottom",
-  //   "st-left"
-  // );
-  // event.elements.event.classList.add(`st-${event.placement}`);
-};
+}
 
 // Default options
 

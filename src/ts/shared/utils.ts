@@ -49,21 +49,6 @@ const defaultComparator: Comparator<any> = (a, b) => {
   if (a > b) return 1;
   return 0;
 };
-export const stableSort = function <T>(
-  array: T[],
-  comparator: Comparator<T> = defaultComparator
-) {
-  const stabilized = array.map((el, index) => <[T, number]>[el, index]);
-  const stableCmp: Comparator<[T, number]> = (a, b) => {
-    const order = comparator(a[0], b[0]);
-    if (order != 0) return order;
-    return a[1] - b[1];
-  };
-  stabilized.sort(stableCmp);
-  for (let i = 0; i < array.length; i++) {
-    array[i] = stabilized[i][0];
-  }
-};
 
 export const partition = function <T>(
   array: T[],

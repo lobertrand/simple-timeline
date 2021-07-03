@@ -1,14 +1,14 @@
-import { createDiv, debounce, stableSort } from "./shared/utils";
+import { createDiv, debounce } from "./shared/utils";
 import {
   updateEventPosition,
+  updateEventProperties,
   updateEventPlacement,
   TimelineEvent,
   TimelineInputEvent,
-  updateEventProperties,
 } from "./timeline_event";
 import { Color } from "./shared/colors";
-import { Point } from "./point";
-import { computeEventPositions } from "./positionning";
+import { Point } from "./shapes";
+import { computePositions } from "./positionning";
 
 export type TimelineOptions<T = any> = {
   events?: TimelineInputEvent<T>[];
@@ -47,8 +47,6 @@ type TimelineMouseEvents<T = any> = {
 export type TimelineProperties = {
   minTime?: number;
   maxTime?: number;
-  leftBound?: number; // 0..1
-  rightBound?: number; // 0..1
   lineHeight?: number; // px
   width?: number; // px
   height?: number; // px
@@ -72,14 +70,15 @@ export class Timeline<T = any> {
     this.formatter = options.formatter ?? defaultFormatter;
     this.alternate = options.alternate ?? true;
     this.container = options.container ?? defaultContainer();
-    const inputEvents = Array.from(options.events) ?? [];
+    const inputEvents = Array.from(options.events ?? []);
     const mouseEvents = options.mouseEvents ?? {};
     const width = options.width ?? "100%";
     const height = options.height ?? "100%";
 
     // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st" style="width: ${width}; height: ${height}; position: relative;">
+      <div class="st" style="width: ${width}; height: ${height};
+                             position: relative;">
         <div class="st-line"></div>
         <div class="st-track"></div>
       </div>
@@ -100,11 +99,10 @@ export class Timeline<T = any> {
           timeline: this,
         })
     );
-
     updateAllEvents(this);
 
     new ResizeObserver(
-      debounce(200, () => {
+      debounce(50, () => {
         updateTimelineProperties(this);
         updateTimelinePositions(this);
         updateAllEvents(this);
@@ -138,10 +136,9 @@ export class Timeline<T = any> {
     // Delete existing events (without recomputing positions at each removal)
     this.events.forEach((event) => {
       // Remove from UI
-      // event.elements.event.remove();
-      event.elements.label.remove();
-      event.elements.line.remove();
-      event.elements.point.remove();
+      event._elements.label.remove();
+      event._elements.line.remove();
+      event._elements.point.remove();
     });
     this.events = [];
     // Add new events and ecompute all positions once
@@ -155,19 +152,19 @@ export const updateAllEvents = (timeline: Timeline) => {
   recomputeMinMax(timeline);
   sortEvents(timeline.events);
   timeline.events.forEach((event, i) => {
-    event.index = i;
+    event._index = i;
     updateEventProperties(event);
     updateEventPosition(event);
     updateEventPlacement(event);
   });
 
-  computeEventPositions(timeline.events).forEach((position) => {
-    const { event, lineHeight, labelLeft, labelTop, lineTop } = position;
+  computePositions(timeline).forEach((position) => {
+    const { event, line, label} = position;
 
-    event.elements.label.style.top = labelTop + "px";
-    event.elements.label.style.left = labelLeft + "px";
-    event.elements.line.style.height = lineHeight + "px";
-    event.elements.line.style.top = lineTop + "px";
+    event._elements.label.style.top = label.top + "px";
+    event._elements.label.style.left = label.left + "px";
+    event._elements.line.style.height = line.height + "px";
+    event._elements.line.style.top = line.top + "px";
   });
 };
 
@@ -178,13 +175,9 @@ const updateTimelineProperties = (timeline: Timeline) => {
 
   props.width = timeline.elements.timeline.offsetWidth;
   props.height = timeline.elements.timeline.offsetHeight;
-
   props.lineHeight = props.height * 0.5;
-  props.leftBound = 0.15;
-  props.rightBound = 0.85;
-
-  props.startPoint = new Point(props.width * props.leftBound, props.lineHeight);
-  props.endPoint = new Point(props.width * props.rightBound, props.lineHeight);
+  props.startPoint = new Point(props.width * 0.15, props.lineHeight);
+  props.endPoint = new Point(props.width * 0.85, props.lineHeight);
 };
 
 const updateTimelinePositions = (timeline: Timeline) => {
@@ -215,7 +208,7 @@ const minMaxTimes = (events: TimelineInputEvent[]) => {
 };
 
 const sortEvents = (events: TimelineInputEvent[]) => {
-  stableSort(events, (a, b) => a.date.getTime() - b.date.getTime());
+  events.sort((a, b) => a.date.getTime() - b.date.getTime());
 };
 
 const attachMouseEvent = (
@@ -229,7 +222,7 @@ const attachMouseEvent = (
     const element = target.closest("[data-st-event-ref]");
     if (element instanceof HTMLElement) {
       const ref = element.dataset.stEventRef;
-      const event = timeline.events.find((e) => e.ref === ref);
+      const event = timeline.events.find((e) => e._ref === ref);
       handler(event, mouseEvent);
     }
   };
