@@ -1,7 +1,6 @@
 import { Color } from "./shared/colors";
-import { updateAllEvents, Timeline } from "./timeline";
+import { positionEverything, Timeline } from "./timeline";
 import { parseDiv, randomString } from "./shared/utils";
-import { Point } from "./shapes";
 
 export type TimelineEventPlacement = "top" | "bottom";
 
@@ -28,10 +27,6 @@ type TimelineEventElements = {
   point?: HTMLDivElement;
 };
 
-type TimelineEventProperties = {
-  pointPosition?: Point;
-};
-
 export class TimelineEvent<T = any> {
   // TimelineInputEvent properties
   _date: Date;
@@ -45,7 +40,6 @@ export class TimelineEvent<T = any> {
   _index: number;
 
   // Other properties
-  _properties: TimelineEventProperties = {};
   readonly _elements: TimelineEventElements = {};
   readonly _ref = randomString(8); // Unique identifier for an event
 
@@ -128,7 +122,7 @@ export class TimelineEvent<T = any> {
     }
     if (updatePosition) {
       updateEventPlacement(this);
-      updateAllEvents(this.timeline);
+      positionEverything(this.timeline);
     }
   }
 
@@ -138,7 +132,7 @@ export class TimelineEvent<T = any> {
     this._elements.label.remove();
     this._elements.line.remove();
     this._elements.point.remove();
-    updateAllEvents(this.timeline);
+    positionEverything(this.timeline);
   }
 
   get date() {
@@ -168,41 +162,11 @@ export class TimelineEvent<T = any> {
 
 // Private API
 
-export const updateEventProperties = (event: TimelineEvent) => {
-  const { minTime, maxTime, startPoint, endPoint } = event._timeline.properties;
-
-  const time = event._date.getTime();
-  const onlyOne = event._timeline.events.length == 1;
-  const lerpAmount = onlyOne ? 0.5 : (time - minTime) / (maxTime - minTime);
-
-  event._properties.pointPosition = Point.lerp(
-    startPoint,
-    endPoint,
-    lerpAmount
-  );
-};
-
-export const updateEventPosition = (event: TimelineEvent) => {
-  const { pointPosition } = event._properties;
-
-  const left = pointPosition.x + "px";
-  const top = pointPosition.y + "px";
-
-  event._elements.label.style.left = left;
-  event._elements.label.style.top = top;
-
-  event._elements.line.style.left = left;
-  event._elements.line.style.top = top;
-
-  event._elements.point.style.left = left;
-  event._elements.point.style.top = top;
-};
-
 export const updateEventPlacement = (event: TimelineEvent) => {
   if (event._timeline.alternate) {
     event._placement = event._index % 2 == 0 ? "top" : "bottom";
   }
-}
+};
 
 // Default options
 

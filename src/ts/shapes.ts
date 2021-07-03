@@ -26,10 +26,6 @@ export class Rect {
     this.height = properties.height;
   }
 
-  translateY(dy: number) {
-    this.y += dy;
-  }
-
   get left() {
     return this.x;
   }

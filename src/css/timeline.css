@@ -4,6 +4,7 @@
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
+  transition: var(--st-transition);
 
   --st-transition: 0.3s ease-out;
 }

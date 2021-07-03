@@ -1,13 +1,10 @@
 import { createDiv, debounce } from "./shared/utils";
 import {
-  updateEventPosition,
-  updateEventProperties,
   updateEventPlacement,
   TimelineEvent,
   TimelineInputEvent,
 } from "./timeline_event";
 import { Color } from "./shared/colors";
-import { Point } from "./shapes";
 import { computePositions } from "./positionning";
 
 export type TimelineOptions<T = any> = {
@@ -44,16 +41,6 @@ type TimelineMouseEvents<T = any> = {
   mouseover?: TimelineMouseEventHandler<T>;
 };
 
-export type TimelineProperties = {
-  minTime?: number;
-  maxTime?: number;
-  lineHeight?: number; // px
-  width?: number; // px
-  height?: number; // px
-  startPoint?: Point;
-  endPoint?: Point;
-};
-
 export class Timeline<T = any> {
   // TimelineOptions properties
   events: TimelineEvent<T>[];
@@ -63,7 +50,6 @@ export class Timeline<T = any> {
 
   // Other properties
   elements: TimelineElements = {};
-  properties: TimelineProperties = {};
 
   constructor(options: TimelineOptions<T>) {
     // Options validation
@@ -87,10 +73,6 @@ export class Timeline<T = any> {
     this.elements.line = this.container.querySelector(".st-line");
     this.elements.track = this.container.querySelector(".st-track");
 
-    // Computing timeline dimensions updating positions
-    updateTimelineProperties(this);
-    updateTimelinePositions(this);
-
     // Building events
     this.events = inputEvents.map(
       (inputEvent) =>
@@ -99,13 +81,12 @@ export class Timeline<T = any> {
           timeline: this,
         })
     );
-    updateAllEvents(this);
+    sortEvents(this.events);
+    positionEverything(this);
 
     new ResizeObserver(
       debounce(50, () => {
-        updateTimelineProperties(this);
-        updateTimelinePositions(this);
-        updateAllEvents(this);
+        positionEverything(this);
       })
     ).observe(this.elements.timeline);
 
@@ -129,7 +110,8 @@ export class Timeline<T = any> {
       );
     });
     // Recompute all positions once
-    updateAllEvents(this);
+    sortEvents(this.events);
+    positionEverything(this);
   }
 
   setEvents(newEventOptions: TimelineInputEvent<T>[]) {
@@ -148,64 +130,43 @@ export class Timeline<T = any> {
 
 // Private API
 
-export const updateAllEvents = (timeline: Timeline) => {
-  recomputeMinMax(timeline);
-  sortEvents(timeline.events);
+/**
+ * Computes and applies positionning to every HTML element of the timeline.
+ * This function requires the timeline events to be already sorted by date.
+ */
+export const positionEverything = (timeline: Timeline) => {
+  console.time("positionEverything");
+
   timeline.events.forEach((event, i) => {
     event._index = i;
-    updateEventProperties(event);
-    updateEventPosition(event);
     updateEventPlacement(event);
   });
 
-  computePositions(timeline).forEach((position) => {
-    const { event, line, label} = position;
+  const { eventProperties, height, startPoint, endPoint } =
+    computePositions(timeline);
 
+  eventProperties.forEach((position) => {
+    const { event, line, label, point } = position;
     event._elements.label.style.top = label.top + "px";
     event._elements.label.style.left = label.left + "px";
     event._elements.line.style.height = line.height + "px";
     event._elements.line.style.top = line.top + "px";
+    event._elements.line.style.left = point.x + "px";
+    event._elements.point.style.left = point.x + "px";
+    event._elements.point.style.top = point.y + "px";
   });
-};
-
-// Helper functions
-
-const updateTimelineProperties = (timeline: Timeline) => {
-  const props = timeline.properties;
-
-  props.width = timeline.elements.timeline.offsetWidth;
-  props.height = timeline.elements.timeline.offsetHeight;
-  props.lineHeight = props.height * 0.5;
-  props.startPoint = new Point(props.width * 0.15, props.lineHeight);
-  props.endPoint = new Point(props.width * 0.85, props.lineHeight);
-};
-
-const updateTimelinePositions = (timeline: Timeline) => {
-  const { startPoint, endPoint } = timeline.properties;
 
   // Placing line and track
   timeline.elements.line.style.top = startPoint.y + "px";
   timeline.elements.track.style.top = startPoint.y + "px";
   timeline.elements.track.style.left = startPoint.x + "px";
   timeline.elements.track.style.width = endPoint.x - startPoint.x + "px";
+  timeline.elements.timeline.style.height = height + "px";
+
+  console.timeEnd("positionEverything");
 };
 
-const recomputeMinMax = (timeline: Timeline) => {
-  const { min, max } = minMaxTimes(timeline.events);
-  timeline.properties.minTime = min;
-  timeline.properties.maxTime = max;
-};
-
-const minMaxTimes = (events: TimelineInputEvent[]) => {
-  let min = Infinity;
-  let max = 0;
-  for (const event of events) {
-    const time = event.date.getTime();
-    min = Math.min(time, min);
-    max = Math.max(time, max);
-  }
-  return { min, max };
-};
+// Helper functions
 
 const sortEvents = (events: TimelineInputEvent[]) => {
   events.sort((a, b) => a.date.getTime() - b.date.getTime());

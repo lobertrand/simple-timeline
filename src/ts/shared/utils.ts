@@ -40,16 +40,6 @@ export const debounce = function (ms: number, fn: Function) {
   };
 };
 
-// Taken from : https://medium.com/@fsufitch/is-javascript-array-sort-stable-46b90822543f
-interface Comparator<T> {
-  (a: T, b: T): number;
-}
-const defaultComparator: Comparator<any> = (a, b) => {
-  if (a < b) return -1;
-  if (a > b) return 1;
-  return 0;
-};
-
 export const partition = function <T>(
   array: T[],
   ...predicates: ((elt: T) => boolean)[]
