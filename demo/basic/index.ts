@@ -71,12 +71,11 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((myEvent, i) => ({
   color: myEvent.color,
   data: myEvent,
   // placement: "bottom",
-  // placement: i % 2 == 1 ? "top" : "bottom",
 }));
 
 const timeline = new Timeline({
   container: document.querySelector("#timeline-container"),
-  events: events,
+  events,
   // alternate: false,
   // formatter: (event) => {
   //   const day = event.date.toLocaleDateString("fr-FR", { day: "numeric" });

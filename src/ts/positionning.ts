@@ -23,19 +23,67 @@ export const computePositions = function (
   timeline: Timeline
 ): TimelineProperties {
   const events = timeline.events;
+
+  let height = timeline.elements.timeline.offsetHeight;
+  let lineHeight = height / 2;
+
+  const minTime = events[0]?._date.getTime() ?? 0;
+  const maxTime = events[events.length - 1]?._date.getTime() ?? 0;
+  const width = timeline.elements.timeline.offsetWidth;
+  const startPoint = new Point(width * 0.15, lineHeight);
+  const endPoint = new Point(width * 0.85, lineHeight);
+
+  const eventProperties = computeAllEventPositions(
+    events,
+    minTime,
+    maxTime,
+    startPoint,
+    endPoint
+  );
+
+  // Auto resize timeline element and adjust positions accordingly
+  let minY = lineHeight;
+  let maxY = lineHeight;
+  for (const position of eventProperties) {
+    minY = Math.min(minY, position.label.top);
+    maxY = Math.max(maxY, position.label.bottom);
+  }
+  const yMargin = 20;
+  const diff = yMargin - minY;
+  for (const position of eventProperties) {
+    position.label.y += diff;
+    position.line.top += diff;
+    position.line.bottom += diff;
+    position.point.y += diff;
+  }
+  startPoint.y += diff;
+  endPoint.y += diff;
+  lineHeight += diff;
+  height = maxY - minY + yMargin * 2;
+
+  return {
+    timeline,
+    eventProperties,
+    lineHeight,
+    height,
+    startPoint,
+    endPoint,
+  };
+};
+
+const computeAllEventPositions = function (
+  events: TimelineEvent[],
+  minTime: number,
+  maxTime: number,
+  startPoint: Point,
+  endPoint: Point
+) {
   // For the moment we don't consider "left" and "right" placements
   const [topPlaced, bottomPlaced] = partition(
     events,
     (e) => e.placement === "top",
     (e) => e.placement === "bottom"
   );
-
-  const minTime = events[0]?._date.getTime() ?? 0;
-  const maxTime = events[events.length - 1]?._date.getTime() ?? 0;
-  const width = timeline.elements.timeline.offsetWidth;
-  const startPoint = new Point(width * 0.15, 0);
-  const endPoint = new Point(width * 0.85, 0);
-
   const topPositions = computePositionsForPlacement(
     topPlaced,
     "top",
@@ -52,42 +100,7 @@ export const computePositions = function (
     minTime,
     maxTime
   );
-  const positions = topPositions.concat(bottomPositions);
-
-  // Compute uppest and lowest element positions
-  let minY = 0;
-  let maxY = 0;
-  for (const position of positions) {
-    minY = Math.min(minY, position.label.top);
-    maxY = Math.max(maxY, position.label.bottom);
-  }
-
-  // Auto resize timeline
-  const yMargin = 20;
-  const diff = yMargin - minY;
-
-  for (const position of positions) {
-    position.label.y += diff;
-    position.line.top += diff;
-    position.line.bottom += diff;
-    position.point.y += diff;
-  }
-  startPoint.y += diff;
-  endPoint.y += diff;
-
-  const lineHeight = diff;
-  const height = maxY - minY + yMargin * 2;
-
-  const timelineProperties = {
-    timeline,
-    eventProperties: positions,
-    lineHeight,
-    height,
-    startPoint,
-    endPoint,
-  };
-
-  return timelineProperties;
+  return topPositions.concat(bottomPositions);
 };
 
 const computePositionsForPlacement = function (
