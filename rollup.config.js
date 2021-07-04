@@ -1,4 +1,5 @@
 import typescript from "rollup-plugin-typescript2";
+import { terser } from "rollup-plugin-terser";
 import dts from "rollup-plugin-dts";
 import copy from "rollup-plugin-copy-watch";
 import del from "rollup-plugin-delete";
@@ -38,6 +39,13 @@ export default [{
         }),
     ],
 }, {
+    input: pkg.main,
+    output: [
+        { file: minifiedName(pkg.main), format: "umd" },
+        { file: minifiedName(pkg.module), format: "es" },
+    ],
+    plugins: [terser()],
+}, {
     input: `dist/types/${mainTsName}.d.ts`,
     output: [{
         file: `dist/${pkg.name}-${pkg.version}.d.ts`,
@@ -52,3 +60,9 @@ export default [{
         }),
     ],
 }];
+
+function minifiedName(name) {
+    const parts = name.split(".");
+    parts.splice(parts.length - 1, 0, "min");
+    return parts.join(".");
+}
