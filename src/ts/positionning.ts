@@ -19,37 +19,64 @@ type TimelineEventProperties = {
   point: Point;
 };
 
-export const computePositions = function (
+type BaseProperties = Readonly<{
+  width: number;
+  minTime: number;
+  maxTime: number;
+  startPoint: Point;
+  endPoint: Point;
+  padding: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
+  eventGap: {
+    vertical: number;
+    horizontal: number;
+  };
+  minEventLineLength: number;
+}>;
+
+export const computeTimelineProperties = (
   timeline: Timeline
-): TimelineProperties {
+): TimelineProperties => {
   const events = timeline.events;
 
+  const width = timeline.elements.timeline.offsetWidth;
   let height = timeline.elements.timeline.offsetHeight;
   let lineHeight = height / 2;
 
-  const minTime = events[0]?._date.getTime() ?? 0;
-  const maxTime = events[events.length - 1]?._date.getTime() ?? 0;
-  const width = timeline.elements.timeline.offsetWidth;
-  const startPoint = new Point(width * 0.15, lineHeight);
-  const endPoint = new Point(width * 0.85, lineHeight);
+  const baseProps: BaseProperties = {
+    width: width,
+    minTime: events[0]?._date.getTime() ?? 0,
+    maxTime: events[events.length - 1]?._date.getTime() ?? 0,
+    startPoint: new Point(width * 0.15, lineHeight),
+    endPoint: new Point(width * 0.85, lineHeight),
+    padding: {
+      top: 20,
+      right: 20,
+      bottom: 20,
+      left: 20,
+    },
+    eventGap: {
+      vertical: 8,
+      horizontal: 0,
+    },
+    minEventLineLength: 20,
+  };
+  const startPoint = baseProps.startPoint.copy();
+  const endPoint = baseProps.endPoint.copy();
+  const eventProperties = computeAllEventProperties(events, baseProps);
 
-  const eventProperties = computeAllEventPositions(
-    events,
-    minTime,
-    maxTime,
-    startPoint,
-    endPoint
-  );
-
-  // Auto resize timeline element and adjust positions accordingly
+  // Auto resize timeline element and shift positions accordingly
   let minY = lineHeight;
   let maxY = lineHeight;
   for (const position of eventProperties) {
     minY = Math.min(minY, position.label.top);
     maxY = Math.max(maxY, position.label.bottom);
   }
-  const yMargin = 20;
-  const diff = yMargin - minY;
+  const diff = baseProps.padding.top - minY;
   for (const position of eventProperties) {
     position.label.y += diff;
     position.line.top += diff;
@@ -59,7 +86,7 @@ export const computePositions = function (
   startPoint.y += diff;
   endPoint.y += diff;
   lineHeight += diff;
-  height = maxY - minY + yMargin * 2;
+  height = maxY - minY + baseProps.padding.top + baseProps.padding.bottom;
 
   return {
     timeline,
@@ -71,83 +98,42 @@ export const computePositions = function (
   };
 };
 
-const computeAllEventPositions = function (
+const computeAllEventProperties = (
   events: TimelineEvent[],
-  minTime: number,
-  maxTime: number,
-  startPoint: Point,
-  endPoint: Point
-) {
+  baseProperties: BaseProperties
+) => {
   // For the moment we don't consider "left" and "right" placements
   const [topPlaced, bottomPlaced] = partition(
     events,
     (e) => e.placement === "top",
     (e) => e.placement === "bottom"
   );
-  const topPositions = computePositionsForPlacement(
+  const topPositions = computeEventPropertiesByPlacement(
     topPlaced,
     "top",
-    startPoint,
-    endPoint,
-    minTime,
-    maxTime
+    baseProperties
   );
-  const bottomPositions = computePositionsForPlacement(
+  const bottomPositions = computeEventPropertiesByPlacement(
     bottomPlaced,
     "bottom",
-    startPoint,
-    endPoint,
-    minTime,
-    maxTime
+    baseProperties
   );
   return topPositions.concat(bottomPositions);
 };
 
-const computePositionsForPlacement = function (
+const computeEventPropertiesByPlacement = (
   events: TimelineEvent[],
   placement: TimelineEventPlacement,
-  startPoint: Point,
-  endPoint: Point,
-  minTime: number,
-  maxTime: number
-): TimelineEventProperties[] {
+  baseProps: BaseProperties
+): TimelineEventProperties[] => {
+  const {
+    eventGap: { vertical: vGap, horizontal: hGap },
+  } = baseProps;
+
   const placedEvents: TimelineEventProperties[] = [];
-  const vGap = 8; // px
-  const hGap = 0; // px
 
   for (const event of events) {
-    const pointPosition = computeEventPoint(
-      event,
-      startPoint,
-      endPoint,
-      minTime,
-      maxTime
-    );
-
-    const { offsetWidth, offsetHeight } = event._elements.label;
-
-    // Starting position
-    const eventLineHeight = 30; // px
-    const current: TimelineEventProperties = {
-      event,
-      point: pointPosition,
-      label: new Rect({
-        x: pointPosition.x - offsetWidth / 2,
-        y:
-          placement === "top"
-            ? pointPosition.y - eventLineHeight - offsetHeight
-            : pointPosition.y + eventLineHeight,
-        width: offsetWidth,
-        height: offsetHeight,
-      }),
-      line: new Line({
-        top:
-          placement === "top"
-            ? pointPosition.y - eventLineHeight
-            : pointPosition.y,
-        height: eventLineHeight,
-      }),
-    };
+    const current = initialEventPosition(event, baseProps);
 
     // Select already placed events which could potentially overlap with
     // this event if we were to change the current event's vertical position
@@ -158,12 +144,11 @@ const computePositionsForPlacement = function (
     );
 
     if (verticalOverlaps.length > 0) {
-      if (placement === "top") {
-        verticalOverlaps.sort((a, b) => b.label.top - a.label.top);
-      } else {
-        verticalOverlaps.sort((a, b) => a.label.bottom - b.label.bottom);
-      }
-
+      verticalOverlaps.sort(
+        placement === "top"
+          ? (a, b) => b.label.top - a.label.top
+          : (a, b) => a.label.bottom - b.label.bottom
+      );
       for (const overlap of verticalOverlaps) {
         const strictOverlaps = verticalOverlaps.filter(
           (other) =>
@@ -200,13 +185,44 @@ const computePositionsForPlacement = function (
   return placedEvents;
 };
 
+const initialEventPosition = (
+  event: TimelineEvent,
+  baseProps: BaseProperties
+): TimelineEventProperties => {
+  const placement = event._placement;
+  const { width, padding, minEventLineLength } = baseProps;
+  const point = computeEventPoint(event, baseProps);
+  const { offsetWidth, offsetHeight } = event._elements.label;
+
+  const baseX = point.x - offsetWidth / 2;
+  const leftBound = padding.left;
+  const rightBound = width - offsetWidth - padding.right;
+  const x = Math.max(leftBound, Math.min(baseX, rightBound));
+
+  return {
+    event,
+    point,
+    label: new Rect({
+      x: x,
+      y:
+        placement === "top"
+          ? point.y - minEventLineLength - offsetHeight
+          : point.y + minEventLineLength,
+      width: offsetWidth,
+      height: offsetHeight,
+    }),
+    line: new Line({
+      top: placement === "top" ? point.y - minEventLineLength : point.y,
+      height: minEventLineLength,
+    }),
+  };
+};
+
 const computeEventPoint = (
   event: TimelineEvent,
-  startPoint: Point,
-  endPoint: Point,
-  minTime: number,
-  maxTime: number
+  baseProperties: BaseProperties
 ) => {
+  const { minTime, maxTime, startPoint, endPoint } = baseProperties;
   const time = event._date.getTime();
   const onlyOne = event._timeline.events.length == 1;
   const lerpAmount = onlyOne ? 0.5 : (time - minTime) / (maxTime - minTime);

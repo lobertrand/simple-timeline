@@ -1,6 +1,6 @@
 /* Simple Timeline default styles */
 
-.st {
+.st-timeline {
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
@@ -47,7 +47,6 @@
   position: absolute;
   box-sizing: border-box;
   width: 1px;
-  /* transform: translateX(-50%); */
   background-color: currentColor;
   transition: var(--st-transition);
   z-index: 1;

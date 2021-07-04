@@ -6,6 +6,10 @@ export class Point {
     const y = a.y + (b.y - a.y) * amount;
     return new Point(x, y);
   }
+
+  copy(): Point {
+    return new Point(this.x, this.y);
+  }
 }
 
 export class Rect {

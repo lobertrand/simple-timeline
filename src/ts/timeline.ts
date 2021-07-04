@@ -4,8 +4,7 @@ import {
   TimelineEvent,
   TimelineInputEvent,
 } from "./timeline_event";
-import { Color } from "./shared/colors";
-import { computePositions } from "./positionning";
+import { computeTimelineProperties } from "./positionning";
 
 export type TimelineOptions<T = any> = {
   events?: TimelineInputEvent<T>[];
@@ -51,12 +50,12 @@ export class Timeline<T = any> {
 
     // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st">
+      <div class="st-timeline">
         <div class="st-line"></div>
         <div class="st-track"></div>
       </div>
     `;
-    this.elements.timeline = this.container.querySelector(".st");
+    this.elements.timeline = this.container.querySelector(".st-timeline");
     this.elements.line = this.container.querySelector(".st-line");
     this.elements.track = this.container.querySelector(".st-track");
 
@@ -69,11 +68,11 @@ export class Timeline<T = any> {
         })
     );
     sortEvents(this.events);
-    positionEverything(this);
+    repositionEverything(this);
 
     new ResizeObserver(
       debounce(50, () => {
-        positionEverything(this);
+        repositionEverything(this);
       })
     ).observe(this.elements.timeline);
 
@@ -98,7 +97,7 @@ export class Timeline<T = any> {
     });
     // Recompute all positions once
     sortEvents(this.events);
-    positionEverything(this);
+    repositionEverything(this);
   }
 
   setEvents(newEventOptions: TimelineInputEvent<T>[]) {
@@ -110,7 +109,7 @@ export class Timeline<T = any> {
       event._elements.point.remove();
     });
     this.events = [];
-    // Add new events and ecompute all positions once
+    // Add new events and recompute all positions once
     this.addEvents(newEventOptions);
   }
 }
@@ -121,36 +120,31 @@ export class Timeline<T = any> {
  * Computes and applies positionning to every HTML element of the timeline.
  * This function requires the timeline events to be already sorted by date.
  */
-export const positionEverything = (timeline: Timeline) => {
-  console.time("positionEverything");
-
+export const repositionEverything = (timeline: Timeline) => {
   timeline.events.forEach((event, i) => {
     event._index = i;
     updateEventPlacement(event);
   });
 
   const { eventProperties, height, startPoint, endPoint } =
-    computePositions(timeline);
+    computeTimelineProperties(timeline);
 
-  eventProperties.forEach((position) => {
-    const { event, line, label, point } = position;
-    event._elements.label.style.top = label.top + "px";
+  eventProperties.forEach(({ event, line, label, point }) => {
     event._elements.label.style.left = label.left + "px";
+    event._elements.label.style.top = label.top + "px";
+    event._elements.line.style.left = point.x + "px";
     event._elements.line.style.height = line.height + "px";
     event._elements.line.style.top = line.top + "px";
-    event._elements.line.style.left = point.x + "px";
     event._elements.point.style.left = point.x + "px";
     event._elements.point.style.top = point.y + "px";
   });
 
   // Placing line and track
   timeline.elements.line.style.top = startPoint.y + "px";
-  timeline.elements.track.style.top = startPoint.y + "px";
   timeline.elements.track.style.left = startPoint.x + "px";
+  timeline.elements.track.style.top = startPoint.y + "px";
   timeline.elements.track.style.width = endPoint.x - startPoint.x + "px";
   timeline.elements.timeline.style.height = height + "px";
-
-  console.timeEnd("positionEverything");
 };
 
 // Helper functions
@@ -186,9 +180,9 @@ const defaultFormatter = (event: TimelineEvent) => {
   return /*html*/ `
     <div style="white-space: nowrap;">
       <span style="color: ${event.color};">● </span>
-      <strong style="color: ${Color.BLUE_GREY_900};">${date}</strong>
+      <strong style="color: #263238;">${date}</strong>
     </div>
-    <div style="color: ${Color.BLUE_GREY_600};">${event.description}</div>
+    <div style="color: #546E7A;">${event.description}</div>
   `;
 };
 

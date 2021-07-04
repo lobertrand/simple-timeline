@@ -1,4 +1,4 @@
-export const createDiv = function (className = "", parent?: Element) {
+export const createDiv = (className = "", parent?: Element) => {
   const div = document.createElement("div");
   if (className) {
     div.className = className;
@@ -7,7 +7,7 @@ export const createDiv = function (className = "", parent?: Element) {
   return div;
 };
 
-export const parseDiv = function (html: string): HTMLDivElement {
+export const parseDiv = (html: string): HTMLDivElement => {
   const wrapper = document.createElement("div");
   wrapper.innerHTML = html;
   if (wrapper.childElementCount == 1) {
@@ -17,7 +17,7 @@ export const parseDiv = function (html: string): HTMLDivElement {
   }
 };
 
-export const randomString = function (length: number): string {
+export const randomString = (length: number): string => {
   const result = Array.from({ length });
   const characters =
     "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -30,7 +30,7 @@ export const randomString = function (length: number): string {
 };
 
 // Taken from : https://jsfiddle.net/rudiedirkx/p0ckdcnv/
-export const debounce = function (ms: number, fn: Function) {
+export const debounce = (ms: number, fn: Function) => {
   let timer: NodeJS.Timeout;
   return function () {
     clearTimeout(timer);

@@ -1,5 +1,4 @@
-import { Color } from "./shared/colors";
-import { positionEverything, Timeline } from "./timeline";
+import { repositionEverything, Timeline } from "./timeline";
 import { parseDiv, randomString } from "./shared/utils";
 
 export type TimelineEventPlacement = "top" | "bottom";
@@ -121,8 +120,7 @@ export class TimelineEvent<T = any> {
       this._elements.line.style.color = this._color;
     }
     if (updatePosition) {
-      updateEventPlacement(this);
-      positionEverything(this.timeline);
+      repositionEverything(this.timeline);
     }
   }
 
@@ -132,7 +130,7 @@ export class TimelineEvent<T = any> {
     this._elements.label.remove();
     this._elements.line.remove();
     this._elements.point.remove();
-    positionEverything(this.timeline);
+    repositionEverything(this.timeline);
   }
 
   get date() {
@@ -171,4 +169,4 @@ export const updateEventPlacement = (event: TimelineEvent) => {
 // Default options
 
 const defaultDescription = "Event";
-const defaultColor = Color.BLUE_GREY_500;
+const defaultColor = "#607D8B";

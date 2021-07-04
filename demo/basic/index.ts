@@ -41,7 +41,7 @@ const myEvents: MyEvent[] = [
   },
   {
     id: 6,
-    date: "2021-07-20",
+    date: "2021-07-02",
     description: "Goodbye",
     color: "#673AB7",
   },
@@ -59,7 +59,7 @@ const myEvents: MyEvent[] = [
   },
   {
     id: 9,
-    date: "2021-08-10",
+    date: "2021-08-20",
     description: "Don't worry",
     color: "#795548",
   },
@@ -122,14 +122,11 @@ const randomizeBtn = document.querySelector(
 ) as HTMLButtonElement;
 
 addEventBtn.onclick = () => {
-  const min = timeline.properties.minTime;
-  const max = timeline.properties.maxTime;
-  const rand = Math.floor(Math.random() * (max - min + 1) + min);
-  const d =  new Date(rand).toISOString().slice(0, 10);
-
+  const randomTime = Date.now() + Math.floor(Math.random() * 1e10 - 1e10 / 2);
+  const date = new Date(randomTime).toISOString().slice(0, 10);
   const event = {
     id: 5,
-    date: d,
+    date,
     description: "New Event",
     color: randomColor(),
   };
@@ -154,30 +151,8 @@ randomizeBtn.onclick = () => {
 
 console.log(timeline);
 
-function random<T>(array: T[]): T {
-  const index = Math.floor(Math.random() * array.length);
-  return array[index];
-}
-
-function randomDateString(min: string, max: string): string {
-  const d1 = new Date(min).getTime();
-  const d2 = new Date(max).getTime();
-  const d3 = Math.floor(Math.random() * (d2 - d1 + 1) + d1);
-  return new Date(d3).toISOString().slice(0, 10);
-}
-
 function randomColor(): string {
   return "#" + Math.floor(Math.random() * 16777215).toString(16);
-}
-
-function reverse(str: string): string {
-  return str.split("").reverse().join("");
-}
-
-function addDays(date: Date, n: number): Date {
-  const newDate = new Date(date);
-  newDate.setDate(newDate.getDate() + n);
-  return newDate;
 }
 
 function shuffle<T>(array: T[]) {
