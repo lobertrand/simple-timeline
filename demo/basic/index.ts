@@ -70,46 +70,30 @@ const events: TimelineInputEvent<MyEvent>[] = myEvents.map((myEvent, i) => ({
   description: myEvent.description,
   color: myEvent.color,
   data: myEvent,
-  // placement: "bottom",
 }));
 
-const timeline = new Timeline({
-  container: document.querySelector("#timeline-container"),
+const timeline = new Timeline<MyEvent>({
   events,
-  // alternate: false,
-  // formatter: (event) => {
-  //   const day = event.date.toLocaleDateString("fr-FR", { day: "numeric" });
-  //   const month = event.date.toLocaleDateString("fr-FR", { month: "short" });
-  //   return /*html*/ `
-  //     <div style="display: flex; align-items: center; align-items: stretch;
-  //       border: 1px solid ${event.color}; border-radius: 8px; overflow: hidden;">
-  //       <div style="color: ${event.color}; text-align: center; padding: 8px 12px;
-  //         background-color: ${event.color}0e">
-  //         <div style="font-weight: 800; line-height: 1; font-size: 24px;">${day}</div>
-  //         <div style="font-weight: 700; font-size: 12px;">${month}</div>
-  //       </div>
-  //       <div style="color: #555; padding: 8px 12px;">${event.description}</div>
-  //     </div>
-  //   `;
-  // },
-  mouseEvents: {
-    click(event, mouseEvent) {
-      if (mouseEvent.ctrlKey) {
-        event.delete();
-      } else {
-        desc.innerText = event.description;
-        date.innerHTML =
-          `<span style="color: ${event.color}">● </span>` +
-          event.date.toLocaleDateString(undefined, {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          });
-      }
+  container: document.querySelector("#timeline-container"),
+  config: {
+    events: {
+      mouseEvents: { 
+        click(event, mouseEvent) {
+          if (mouseEvent.ctrlKey) {
+            event.delete();
+          } else {
+            desc.innerText = event.description;
+            date.innerHTML =
+              `<span style="color: ${event.color}">● </span>` +
+              event.date.toLocaleDateString(undefined, {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              });
+          }
+        },
+      },
     },
-    // mouseover(event) {
-    //   console.log("mouseover", event.data.id);
-    // }
   },
 });
 const desc = document.querySelector("#description") as HTMLParagraphElement;

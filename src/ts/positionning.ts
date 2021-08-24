@@ -35,6 +35,8 @@ type BaseProperties = Readonly<{
     vertical: number;
     horizontal: number;
   };
+  autoResizeTimeline: boolean;
+  keepEventsInside: boolean;
   minEventLineLength: number;
 }>;
 
@@ -44,7 +46,7 @@ export const computeTimelineProperties = (
   const events = timeline.events;
 
   const width = timeline.elements.timeline.offsetWidth;
-  let height = timeline.elements.timeline.offsetHeight;
+  let height = 500;
   let lineHeight = height / 2;
 
   const baseProps: BaseProperties = {
@@ -63,6 +65,8 @@ export const computeTimelineProperties = (
       vertical: 8,
       horizontal: 0,
     },
+    autoResizeTimeline: true,
+    keepEventsInside: true,
     minEventLineLength: 20,
   };
   const startPoint = baseProps.startPoint.copy();
@@ -70,23 +74,25 @@ export const computeTimelineProperties = (
   const eventProperties = computeAllEventProperties(events, baseProps);
 
   // Auto resize timeline element and shift positions accordingly
-  let minY = lineHeight;
-  let maxY = lineHeight;
-  for (const position of eventProperties) {
-    minY = Math.min(minY, position.label.top);
-    maxY = Math.max(maxY, position.label.bottom);
+  if (baseProps.autoResizeTimeline) {
+    let minY = lineHeight;
+    let maxY = lineHeight;
+    for (const position of eventProperties) {
+      minY = Math.min(minY, position.label.top);
+      maxY = Math.max(maxY, position.label.bottom);
+    }
+    const diff = baseProps.padding.top - minY;
+    for (const position of eventProperties) {
+      position.label.y += diff;
+      position.line.top += diff;
+      position.line.bottom += diff;
+      position.point.y += diff;
+    }
+    startPoint.y += diff;
+    endPoint.y += diff;
+    lineHeight += diff;
+    height = maxY - minY + baseProps.padding.top + baseProps.padding.bottom;
   }
-  const diff = baseProps.padding.top - minY;
-  for (const position of eventProperties) {
-    position.label.y += diff;
-    position.line.top += diff;
-    position.line.bottom += diff;
-    position.point.y += diff;
-  }
-  startPoint.y += diff;
-  endPoint.y += diff;
-  lineHeight += diff;
-  height = maxY - minY + baseProps.padding.top + baseProps.padding.bottom;
 
   return {
     timeline,
@@ -105,17 +111,17 @@ const computeAllEventProperties = (
   // For the moment we don't consider "left" and "right" placements
   const [topPlaced, bottomPlaced] = partition(
     events,
-    (e) => e.placement === "top",
-    (e) => e.placement === "bottom"
+    (e) => e.placement === "up",
+    (e) => e.placement === "down"
   );
   const topPositions = computeEventPropertiesByPlacement(
     topPlaced,
-    "top",
+    "up",
     baseProperties
   );
   const bottomPositions = computeEventPropertiesByPlacement(
     bottomPlaced,
-    "bottom",
+    "down",
     baseProperties
   );
   return topPositions.concat(bottomPositions);
@@ -145,7 +151,7 @@ const computeEventPropertiesByPlacement = (
 
     if (verticalOverlaps.length > 0) {
       verticalOverlaps.sort(
-        placement === "top"
+        placement === "up"
           ? (a, b) => b.label.top - a.label.top
           : (a, b) => a.label.bottom - b.label.bottom
       );
@@ -159,7 +165,7 @@ const computeEventPropertiesByPlacement = (
           break;
         }
 
-        if (placement == "top") {
+        if (placement == "up") {
           const newLabelBottom = overlap.label.top - vGap;
           const diff = newLabelBottom - current.label.bottom;
 
@@ -190,29 +196,31 @@ const initialEventPosition = (
   baseProps: BaseProperties
 ): TimelineEventProperties => {
   const placement = event._placement;
-  const { width, padding, minEventLineLength } = baseProps;
+  const { width, padding, minEventLineLength, keepEventsInside } = baseProps;
   const point = computeEventPoint(event, baseProps);
   const { offsetWidth, offsetHeight } = event._elements.label;
 
-  const baseX = point.x - offsetWidth / 2;
-  const leftBound = padding.left;
-  const rightBound = width - offsetWidth - padding.right;
-  const x = Math.max(leftBound, Math.min(baseX, rightBound));
+  let x = point.x - offsetWidth / 2;
+  if (keepEventsInside) {
+    const leftBound = padding.left;
+    const rightBound = width - offsetWidth - padding.right;
+    x = Math.max(leftBound, Math.min(x, rightBound));
+  }
 
   return {
     event,
     point,
     label: new Rect({
-      x: x,
+      x,
       y:
-        placement === "top"
+        placement === "up"
           ? point.y - minEventLineLength - offsetHeight
           : point.y + minEventLineLength,
       width: offsetWidth,
       height: offsetHeight,
     }),
     line: new Line({
-      top: placement === "top" ? point.y - minEventLineLength : point.y,
+      top: placement === "up" ? point.y - minEventLineLength : point.y,
       height: minEventLineLength,
     }),
   };

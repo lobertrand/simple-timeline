@@ -40,10 +40,10 @@ export const debounce = (ms: number, fn: Function) => {
   };
 };
 
-export const partition = function <T>(
+export const partition = <T>(
   array: T[],
   ...predicates: ((elt: T) => boolean)[]
-) {
+): T[][] => {
   const result: T[][] = Array.from({ length: predicates.length + 1 }).map(
     () => []
   );
@@ -73,3 +73,28 @@ export const iterateInterlaced = function* <T>(array: T[]) {
     yield array[i];
   }
 };
+
+/**
+ * Simple object check.
+ */
+function isObject(item: any): boolean {
+  return item && typeof item === "object" && !Array.isArray(item);
+}
+
+/**
+ * Deep merge two objects.
+ * Taken from https://stackoverflow.com/a/34749873
+ */
+export function deepMerge<T>(target: T, source: Partial<T>) {
+  if (isObject(target) && isObject(source)) {
+    for (const key in source) {
+      if (isObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+        deepMerge(target[key], source[key]);
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+  return target;
+}

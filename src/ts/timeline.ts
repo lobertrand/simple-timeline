@@ -1,4 +1,4 @@
-import { createDiv, debounce } from "./shared/utils";
+import { createDiv, debounce, deepMerge } from "./shared/utils";
 import {
   updateEventPlacement,
   TimelineEvent,
@@ -9,9 +9,32 @@ import { computeTimelineProperties } from "./positionning";
 export type TimelineOptions<T = any> = {
   events?: TimelineInputEvent<T>[];
   container?: HTMLElement;
-  formatter?: (event: TimelineEvent<T>) => string;
-  alternate?: boolean;
-  mouseEvents?: TimelineMouseEvents<T>;
+  config?: Partial<TimelineConfig<T>>;
+};
+
+type TimelineConfig<T = any> = {
+  events: {
+    formatter?: (event: TimelineEvent<T>) => string;
+    // gap?: {
+    //   vertical?: number;
+    //   horizontal?: number;
+    // };
+    // minLineHeight?: number;
+    // keepInside?: boolean;
+    placement?: "alternate" | "up" | "down";
+    mouseEvents?: TimelineMouseEvents<T>;
+  };
+  // timeline: {
+  //   orientation?: "vertical" | "horizontal";
+  //   reversed?: boolean;
+  //   height?: number | "auto";
+  //   padding?: {
+  //     top?: number;
+  //     right?: number;
+  //     bottom?: number;
+  //     left?: number;
+  //   };
+  // };
 };
 
 type TimelineElements = {
@@ -34,19 +57,42 @@ export class Timeline<T = any> {
   // TimelineOptions properties
   events: TimelineEvent<T>[];
   container: Element;
-  formatter: (event: TimelineEvent<T>) => string;
-  alternate: boolean;
+  config: TimelineConfig;
 
   // Other properties
   elements: TimelineElements = {};
 
   constructor(options: TimelineOptions<T>) {
     // Options validation
-    this.formatter = options.formatter ?? defaultFormatter;
-    this.alternate = options.alternate ?? true;
     this.container = options.container ?? defaultContainer();
     const inputEvents = Array.from(options.events ?? []);
-    const mouseEvents = options.mouseEvents ?? {};
+
+    // Further configuration
+    const defaultConfig: TimelineConfig = {
+      events: {
+        formatter: defaultFormatter,
+        // gap: {
+        //   vertical: 8,
+        //   horizontal: 0,
+        // },
+        // keepInside: true,
+        // minLineHeight: 30,
+        placement: "alternate",
+        mouseEvents: {},
+      },
+      // timeline: {
+      //   orientation: "horizontal",
+      //   reversed: false,
+      //   height: "auto",
+      //   padding: {
+      //     top: 20,
+      //     right: 20,
+      //     bottom: 20,
+      //     left: 20,
+      //   },
+      // },
+    };
+    this.config = deepMerge(defaultConfig, options.config);
 
     // Building elements
     this.container.innerHTML = /*html*/ `
@@ -77,11 +123,12 @@ export class Timeline<T = any> {
     ).observe(this.elements.timeline);
 
     // Mouse events
+    const { mouseEvents } = this.config.events;
     if (mouseEvents.click) {
-      attachMouseEvent(this, options.mouseEvents.click);
+      attachMouseEvent(this, mouseEvents.click);
     }
     if (mouseEvents.mouseover) {
-      attachMouseEvent(this, options.mouseEvents.mouseover);
+      attachMouseEvent(this, mouseEvents.mouseover);
     }
   }
 

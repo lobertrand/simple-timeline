@@ -1,7 +1,7 @@
 import { repositionEverything, Timeline } from "./timeline";
 import { parseDiv, randomString } from "./shared/utils";
 
-export type TimelineEventPlacement = "top" | "bottom";
+export type TimelineEventPlacement = "up" | "down";
 
 export type TimelineInputEvent<T = any> = {
   date: Date;
@@ -53,16 +53,12 @@ export class TimelineEvent<T = any> {
     this._data = options.data;
     this._index = options.index ?? -1;
 
-    if (this._timeline.alternate) {
-      this._placement = this._index % 2 == 0 ? "top" : "bottom";
-    } else {
-      this._placement = options.placement ?? "top";
-    }
+    updateEventPlacement(this);
 
     // Building elements
     this._elements.label = parseDiv(/*html*/ `
       <div class="st-event-label" data-st-event-ref="${this._ref}">
-        ${this._timeline.formatter(this)}
+        ${this._timeline.config.events.formatter(this)}
       </div>
     `);
     this._elements.line = parseDiv(/*html*/ `
@@ -109,12 +105,13 @@ export class TimelineEvent<T = any> {
       updatePosition = true;
     }
     if ("placement" in options) {
-      this._placement = options.placement ?? "top";
+      this._placement = options.placement ?? "up";
       updatePosition = true;
     }
 
     // Update UI
-    this._elements.label.innerHTML = this._timeline.formatter(this);
+    this._elements.label.innerHTML =
+      this._timeline.config.events.formatter(this);
     if (updateColor) {
       this._elements.point.style.color = this._color;
       this._elements.line.style.color = this._color;
@@ -160,11 +157,14 @@ export class TimelineEvent<T = any> {
 
 // Private API
 
-export const updateEventPlacement = (event: TimelineEvent) => {
-  if (event._timeline.alternate) {
-    event._placement = event._index % 2 == 0 ? "top" : "bottom";
+export function updateEventPlacement(event: TimelineEvent) {
+  const { placement } = event._timeline.config.events;
+  if (placement === "alternate") {
+    event._placement = event._index % 2 == 0 ? "up" : "down";
+  } else {
+    event._placement = placement ?? "up";
   }
-};
+}
 
 // Default options
 
