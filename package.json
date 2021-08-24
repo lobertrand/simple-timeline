@@ -1,13 +1,13 @@
 {
-  "name": "simple-timeline",
+  "name": "simple-timeline-component",
   "version": "1.0.0",
   "description": "A simple timeline component with no dependency.",
-  "main": "dist/simple-timeline-1.0.0.js",
-  "module": "dist/simple-timeline-1.0.0.es.js",
+  "main": "dist/simple-timeline-component.js",
+  "module": "dist/simple-timeline-component.es.js",
   "files": [
     "dist"
   ],
-  "types": "dist/simple-timeline-1.0.0.d.ts",
+  "types": "dist/simple-timeline-component.d.ts",
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -cw"

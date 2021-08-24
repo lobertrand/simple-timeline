@@ -1,4 +1,4 @@
-import { Timeline, TimelineInputEvent } from "../../dist/simple-timeline-1.0.0";
+import { Timeline, TimelineInputEvent } from "../../dist/simple-timeline-component";
 
 type MyEvent = {
   id: number;

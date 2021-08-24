@@ -31,7 +31,7 @@ export default [{
                 {
                     src: "src/css/timeline.css",
                     dest: "dist",
-                    rename: `${pkg.name}-${pkg.version}.css`
+                    rename: `${pkg.name}.css`
                 },
             ],
             watch: "src/css",
@@ -48,7 +48,7 @@ export default [{
 }, {
     input: `dist/types/${mainTsName}.d.ts`,
     output: [{
-        file: `dist/${pkg.name}-${pkg.version}.d.ts`,
+        file: `dist/${pkg.name}.d.ts`,
         format: "umd",
     }],
     plugins: [
