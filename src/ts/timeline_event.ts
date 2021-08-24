@@ -8,7 +8,7 @@ export type TimelineInputEvent<T = any> = {
   description?: string;
   color?: string;
   data?: T;
-  placement?: TimelineEventPlacement;
+  // placement?: TimelineEventPlacement;
 };
 
 export type TimelineEventUpdateOptions<T = any> = Partial<
@@ -104,10 +104,10 @@ export class TimelineEvent<T = any> {
       updateColor = true;
       updatePosition = true;
     }
-    if ("placement" in options) {
-      this._placement = options.placement ?? "up";
-      updatePosition = true;
-    }
+    // if ("placement" in options) {
+    //   this._placement = options.placement ?? "up";
+    //   updatePosition = true;
+    // }
 
     // Update UI
     this._elements.label.innerHTML =
