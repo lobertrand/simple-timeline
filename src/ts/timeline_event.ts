@@ -57,17 +57,17 @@ export class TimelineEvent<T = any> {
 
     // Building elements
     this._elements.label = parseDiv(/*html*/ `
-      <div class="st-event-label" data-st-event-ref="${this._ref}">
+      <div class="tc-event-label" data-st-event-ref="${this._ref}">
         ${this._timeline.config.events.formatter(this)}
       </div>
     `);
     this._elements.line = parseDiv(/*html*/ `
-      <div class="st-event-line" style="color: ${this.color};"
+      <div class="tc-event-line" style="color: ${this.color};"
            data-st-event-ref="${this._ref}">
       </div>
     `);
     this._elements.point = parseDiv(/*html*/ `
-      <div class="st-event-point" style="color: ${this.color};"
+      <div class="tc-event-point" style="color: ${this.color};"
            data-st-event-ref="${this._ref}">
       </div>
     `);

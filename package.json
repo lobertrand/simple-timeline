@@ -1,6 +1,6 @@
 {
   "name": "timeline-component",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A simple timeline component with no dependency.",
   "main": "dist/timeline-component.js",
   "module": "dist/timeline-component.es.js",

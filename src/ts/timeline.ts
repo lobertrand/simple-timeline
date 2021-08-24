@@ -96,14 +96,14 @@ export class Timeline<T = any> {
 
     // Building elements
     this.container.innerHTML = /*html*/ `
-      <div class="st-timeline">
-        <div class="st-line"></div>
-        <div class="st-track"></div>
+      <div class="tc-timeline">
+        <div class="tc-timeline-line"></div>
+        <div class="tc-timeline-track"></div>
       </div>
     `;
-    this.elements.timeline = this.container.querySelector(".st-timeline");
-    this.elements.line = this.container.querySelector(".st-line");
-    this.elements.track = this.container.querySelector(".st-track");
+    this.elements.timeline = this.container.querySelector(".tc-timeline");
+    this.elements.line = this.container.querySelector(".tc-timeline-line");
+    this.elements.track = this.container.querySelector(".tc-timeline-track");
 
     // Building events
     this.events = inputEvents.map(

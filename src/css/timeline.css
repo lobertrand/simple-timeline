@@ -1,15 +1,15 @@
 /* Simple Timeline default styles */
 
-.st-timeline {
+.tc-timeline {
   box-sizing: border-box;
   position: relative;
   overflow: hidden;
-  transition: var(--st-transition);
+  transition: var(--tc-transition);
 
-  --st-transition: 0.3s ease-out;
+  --tc-transition: 0.3s ease-out;
 }
 
-.st-line {
+.tc-timeline-line {
   box-sizing: border-box;
   position: absolute;
   left: 0;
@@ -17,19 +17,19 @@
   height: 1px;
   background-color: lightgray;
   transform: translateY(-50%);
-  transition: var(--st-transition);
+  transition: var(--tc-transition);
 }
 
-.st-track {
+.tc-timeline-track {
   box-sizing: border-box;
   position: absolute;
   height: 4px;
   background-color: lightgray;
   transform: translateY(-50%);
-  transition: var(--st-transition);
+  transition: var(--tc-transition);
 }
 
-.st-event-label {
+.tc-event-label {
   position: absolute;
   box-sizing: border-box;
   padding: 8px 12px;
@@ -37,22 +37,22 @@
   border: 1px solid lightgray;
   background-color: white;
   font-size: 15px;
-  transition: var(--st-transition);
+  transition: var(--tc-transition);
   width: max-content;
   max-width: 250px;
   z-index: 3;
 }
 
-.st-event-line {
+.tc-event-line {
   position: absolute;
   box-sizing: border-box;
   width: 1px;
   background-color: currentColor;
-  transition: var(--st-transition);
+  transition: var(--tc-transition);
   z-index: 1;
 }
 
-.st-event-point {
+.tc-event-point {
   position: absolute;
   box-sizing: border-box;
   width: 15px;
@@ -62,6 +62,6 @@
   background-color: currentColor;
   margin: 0 auto;
   transform: translate(-7px, -7px);
-  transition: var(--st-transition);
+  transition: var(--tc-transition);
   z-index: 2;
 }
