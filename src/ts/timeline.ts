@@ -113,7 +113,6 @@ export class Timeline<T = any> {
           timeline: this,
         })
     );
-    sortEvents(this.events);
     repositionEverything(this);
 
     new ResizeObserver(
@@ -143,7 +142,6 @@ export class Timeline<T = any> {
       );
     });
     // Recompute all positions once
-    sortEvents(this.events);
     repositionEverything(this);
   }
 
@@ -168,6 +166,8 @@ export class Timeline<T = any> {
  * This function requires the timeline events to be already sorted by date.
  */
 export const repositionEverything = (timeline: Timeline) => {
+  sortEvents(timeline.events);
+
   timeline.events.forEach((event, i) => {
     event._index = i;
     updateEventPlacement(event);
